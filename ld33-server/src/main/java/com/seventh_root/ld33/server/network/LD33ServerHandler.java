@@ -16,12 +16,14 @@
 
 package com.seventh_root.ld33.server.network;
 
+import com.seventh_root.ld33.common.network.packet.serverbound.PublicKeyServerBoundPacket;
 import com.seventh_root.ld33.server.LD33Server;
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelHandlerAdapter;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.group.ChannelGroup;
 import io.netty.channel.group.DefaultChannelGroup;
+import io.netty.util.AttributeKey;
 import io.netty.util.concurrent.GlobalEventExecutor;
 
 @Sharable
@@ -31,15 +33,17 @@ public class LD33ServerHandler extends ChannelHandlerAdapter {
 
     private ChannelGroup channels;
 
+    private final AttributeKey<byte[]> publicKey;
 
     public LD33ServerHandler(LD33Server server) {
         this.server = server;
         this.channels = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
+        publicKey = AttributeKey.valueOf("publicKey");
     }
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
-
+        channels.add(ctx.channel());
     }
 
     @Override
@@ -49,7 +53,10 @@ public class LD33ServerHandler extends ChannelHandlerAdapter {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-
+        if (msg instanceof PublicKeyServerBoundPacket) {
+            PublicKeyServerBoundPacket packet = (PublicKeyServerBoundPacket) msg;
+            ctx.channel().attr(publicKey).set(packet.getEncodedPublicKey());
+        }
     }
 
     @Override

@@ -18,8 +18,8 @@ package com.seventh_root.ld33.server;
 
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.seventh_root.ld33.common.encrypt.EncryptionManager;
+import com.seventh_root.ld33.server.config.Config;
 import com.seventh_root.ld33.server.network.LD33ClientBoundPacketEncoder;
 import com.seventh_root.ld33.server.network.LD33ServerBoundPacketDecoder;
 import com.seventh_root.ld33.server.network.LD33ServerHandler;
@@ -32,8 +32,10 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 
 import java.io.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.logging.Logger;
 
 import static java.lang.System.currentTimeMillis;
@@ -42,7 +44,8 @@ import static java.util.logging.Level.SEVERE;
 public class LD33Server {
 
     private LD33ServerHandler handler;
-    private Map<String, Object> config;
+    private Config config;
+    private Connection databaseConnection;
     private Logger logger;
     private EncryptionManager encryptionManager;
     private boolean running;
@@ -52,7 +55,7 @@ public class LD33Server {
         new Thread(() -> new LD33Server().start()).start();
     }
 
-    public Map<String, Object> getConfig() {
+    public Config getConfig() {
         return config;
     }
 
@@ -70,6 +73,15 @@ public class LD33Server {
 
     public LD33Server() {
         loadConfig();
+        try {
+            databaseConnection = DriverManager.getConnection(
+                    "jdbc:mysql://" + getConfig().getString("database.url") + "/" + getConfig().getString("database.table"),
+                    getConfig().getString("database.user"),
+                    getConfig().getString("database.password")
+            );
+        } catch (SQLException exception) {
+            getLogger().log(SEVERE, "Failed to connect to database", exception);
+        }
         logger = Logger.getLogger(getClass().getCanonicalName());
         encryptionManager = new EncryptionManager();
     }
@@ -92,7 +104,7 @@ public class LD33Server {
                             );
                         }
                     });
-            Channel channel = bootstrap.bind((int) ((double) getConfig().get("port"))).sync().channel();
+            Channel channel = bootstrap.bind(getConfig().getInt("port", 37896)).sync().channel();
             setRunning(true);
             long beforeTime, timeDiff, sleep;
             beforeTime = currentTimeMillis();
@@ -132,51 +144,22 @@ public class LD33Server {
         try {
             Reader reader = new FileReader(configFile);
             Gson gson = new Gson();
-            config = gson.fromJson(reader, new TypeToken<HashMap<String, Object>>() {
-            }.getType());
+            config = gson.fromJson(reader, new TypeToken<HashMap<String, Object>>() {}.getType());
         } catch (FileNotFoundException exception) {
             getLogger().log(SEVERE, "Failed to find configuration", exception);
         }
     }
 
     public void saveDefaultConfig(File configFile) throws IOException {
-        if (!configFile.getParentFile().isDirectory()) {
-            if (!configFile.getParentFile().delete()) {
-                throw new IOException("Failed to remove " + configFile.getParentFile().getPath() + ": do you have permission?");
-            }
-        }
-        if (!configFile.getParentFile().exists()) {
-            if (!configFile.getParentFile().mkdirs()) {
-                throw new IOException("Failed to create directory " + configFile.getParentFile().getPath() + ": do you have permission?");
-            }
-        }
         if (!configFile.exists()) {
-            Gson gson = new GsonBuilder().setPrettyPrinting().create();
-            Map<String, Object> defaultConfig = new HashMap<>();
-            defaultConfig.put("port", 37896);
-            gson.toJson(defaultConfig, new FileWriter(configFile));
+            Config defaultConfig = new Config();
+            defaultConfig.set("port", 37896);
+            defaultConfig.save(configFile);
         }
     }
 
     public void saveDefaultConfig() throws IOException {
         saveDefaultConfig(new File("./config.json"));
-    }
-
-    public void saveConfig(File configFile) throws IOException {
-        if (!configFile.getParentFile().isDirectory()) {
-            if (!configFile.getParentFile().delete()) {
-                throw new IOException("Failed to remove " + configFile.getParentFile().getPath() + ": do you have permission?");
-            }
-        }
-        if (!configFile.getParentFile().exists()) {
-            if (!configFile.getParentFile().mkdirs()) {
-                throw new IOException("Failed to create directory " + configFile.getParentFile().getPath() + ": do you have permission?");
-            }
-        }
-        if (!configFile.exists()) {
-            Gson gson = new GsonBuilder().setPrettyPrinting().create();
-            gson.toJson(config, new FileWriter(configFile));
-        }
     }
 
 }
