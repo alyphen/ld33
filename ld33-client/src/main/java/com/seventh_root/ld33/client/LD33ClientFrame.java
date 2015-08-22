@@ -16,8 +16,31 @@
 
 package com.seventh_root.ld33.client;
 
-public class LD33ClientFrame {
+import javax.swing.*;
+import java.awt.*;
 
+public class LD33ClientFrame extends JFrame {
 
+    public static void main(String[] args) {
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (ClassNotFoundException | InstantiationException | UnsupportedLookAndFeelException | IllegalAccessException exception) {
+            exception.printStackTrace();
+        }
+        EventQueue.invokeLater(() -> {
+            LD33ClientFrame frame = new LD33ClientFrame();
+            frame.setVisible(true);
+            frame.requestFocus();
+        });
+    }
+
+    public LD33ClientFrame() {
+        setTitle("LD33");
+        setFocusable(true);
+        add(new LD33Client());
+        pack();
+        setLocationRelativeTo(null);
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
+    }
     
 }

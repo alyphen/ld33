@@ -20,17 +20,17 @@ import io.netty.buffer.ByteBuf;
 
 import java.io.UnsupportedEncodingException;
 
-public class PlayerJoinClientBoundPacket extends ClientBoundPacket {
+public class PlayerQuitClientBoundPacket extends ClientBoundPacket {
 
     private String playerName;
 
-    public PlayerJoinClientBoundPacket(String playerName) {
+    public PlayerQuitClientBoundPacket(String playerName) {
         this.playerName = playerName;
     }
 
     @Override
     public int getId() {
-        return 2;
+        return 3;
     }
 
     public String getPlayerName() {

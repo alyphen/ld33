@@ -16,7 +16,7 @@
 
 package com.seventh_root.ld33.server.network;
 
-import com.seventh_root.ld33.common.network.packet.serverbound.PlayerJoinServerBoundPacket;
+import com.seventh_root.ld33.common.network.packet.serverbound.*;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
@@ -31,7 +31,25 @@ public class LD33ServerBoundPacketDecoder extends ByteToMessageDecoder {
             int id = in.readInt();
             switch (id) {
                 case 0:
-                    out.add(new PlayerJoinServerBoundPacket(readString(in)));
+                    byte[] encodedPublicKey = new byte[in.readInt()];
+                    in.readBytes(encodedPublicKey);
+                    out.add(new PublicKeyServerBoundPacket(encodedPublicKey));
+                    break;
+                case 1:
+                    String loggingInPlayerName = readString(in);
+                    byte[] encryptedPassword = new byte[in.readInt()];
+                    boolean signUp = in.readBoolean();
+                    out.add(new PlayerLoginServerBoundPacket(loggingInPlayerName, encryptedPassword, signUp));
+                    break;
+                case 2:
+                    String joiningPlayerName = readString(in);
+                    out.add(new PlayerJoinServerBoundPacket(joiningPlayerName));
+                    break;
+                case 3:
+                    out.add(new PlayerQuitServerBoundPacket());
+                    break;
+                case 4:
+                    out.add(new PingServerBoundPacket());
                     break;
             }
         }

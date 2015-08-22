@@ -16,30 +16,11 @@
 
 package com.seventh_root.ld33.common.network.packet.clientbound;
 
-import io.netty.buffer.ByteBuf;
-
-import java.io.UnsupportedEncodingException;
-
-public class PlayerJoinClientBoundPacket extends ClientBoundPacket {
-
-    private String playerName;
-
-    public PlayerJoinClientBoundPacket(String playerName) {
-        this.playerName = playerName;
-    }
+public class PlayerLoginClientBoundPacket extends ClientBoundPacket {
 
     @Override
     public int getId() {
-        return 2;
+        return 1;
     }
 
-    public String getPlayerName() {
-        return playerName;
-    }
-
-    @Override
-    public void write(ByteBuf buf) throws UnsupportedEncodingException {
-        super.write(buf);
-        writeString(buf, getPlayerName());
-    }
 }

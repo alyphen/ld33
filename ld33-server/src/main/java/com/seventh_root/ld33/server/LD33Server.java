@@ -19,6 +19,7 @@ package com.seventh_root.ld33.server;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.seventh_root.ld33.common.encrypt.EncryptionManager;
 import com.seventh_root.ld33.server.network.LD33ClientBoundPacketEncoder;
 import com.seventh_root.ld33.server.network.LD33ServerBoundPacketDecoder;
 import com.seventh_root.ld33.server.network.LD33ServerHandler;
@@ -43,6 +44,7 @@ public class LD33Server {
     private LD33ServerHandler handler;
     private Map<String, Object> config;
     private Logger logger;
+    private EncryptionManager encryptionManager;
     private boolean running;
     private static final long DELAY = 25L;
 
@@ -69,9 +71,10 @@ public class LD33Server {
     public LD33Server() {
         loadConfig();
         logger = Logger.getLogger(getClass().getCanonicalName());
+        encryptionManager = new EncryptionManager();
     }
 
-    public void start() {
+    private void start() {
         EventLoopGroup bossGroup = new NioEventLoopGroup();
         EventLoopGroup workerGroup = new NioEventLoopGroup();
         try {

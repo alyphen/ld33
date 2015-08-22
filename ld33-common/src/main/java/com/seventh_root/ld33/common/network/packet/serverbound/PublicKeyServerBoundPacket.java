@@ -14,32 +14,34 @@
  * limitations under the License.
  */
 
-package com.seventh_root.ld33.common.network.packet.clientbound;
+package com.seventh_root.ld33.common.network.packet.serverbound;
 
 import io.netty.buffer.ByteBuf;
 
 import java.io.UnsupportedEncodingException;
 
-public class PlayerJoinClientBoundPacket extends ClientBoundPacket {
+public class PublicKeyServerBoundPacket extends ServerBoundPacket {
 
-    private String playerName;
+    private byte[] encodedPublicKey;
 
-    public PlayerJoinClientBoundPacket(String playerName) {
-        this.playerName = playerName;
+    public PublicKeyServerBoundPacket(byte[] encodedPublicKey) {
+        this.encodedPublicKey = encodedPublicKey;
     }
 
     @Override
     public int getId() {
-        return 2;
+        return 0;
     }
 
-    public String getPlayerName() {
-        return playerName;
+    public byte[] getEncodedPublicKey() {
+        return encodedPublicKey;
     }
 
     @Override
     public void write(ByteBuf buf) throws UnsupportedEncodingException {
         super.write(buf);
-        writeString(buf, getPlayerName());
+        buf.writeInt(getEncodedPublicKey().length);
+        buf.writeBytes(getEncodedPublicKey());
     }
+
 }

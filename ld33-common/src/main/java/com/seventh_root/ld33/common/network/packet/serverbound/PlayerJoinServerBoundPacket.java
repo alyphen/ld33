@@ -30,7 +30,7 @@ public class PlayerJoinServerBoundPacket extends ServerBoundPacket {
 
     @Override
     public int getId() {
-        return 0;
+        return 2;
     }
 
     public String getPlayerName() {
