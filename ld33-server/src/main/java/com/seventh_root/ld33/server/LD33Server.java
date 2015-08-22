@@ -30,11 +30,12 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Logger;
 
 import static java.lang.System.currentTimeMillis;
@@ -150,8 +151,8 @@ public class LD33Server {
         }
         try {
             config = Config.load(configFile);
-        } catch (FileNotFoundException exception) {
-            getLogger().log(SEVERE, "Failed to find configuration", exception);
+        } catch (IOException exception) {
+            getLogger().log(SEVERE, "Failed to load configuration", exception);
         }
     }
 
@@ -159,10 +160,12 @@ public class LD33Server {
         if (!configFile.exists()) {
             Config defaultConfig = new Config();
             defaultConfig.set("port", 37896);
-            defaultConfig.set("database.url", "localhost");
-            defaultConfig.set("database.database", "ld33");
-            defaultConfig.set("database.user", "ld33");
-            defaultConfig.set("database.password", "secret");
+            Map<String, Object> databaseSettings = new HashMap<>();
+            databaseSettings.put("url", "localhost");
+            databaseSettings.put("database", "ld33");
+            databaseSettings.put("user", "ld33");
+            databaseSettings.put("password", "secret");
+            defaultConfig.set("database", databaseSettings);
             defaultConfig.save(configFile);
         }
     }

@@ -26,10 +26,11 @@ import java.util.Map;
 
 public class Config {
 
-    public static Config load(File file) throws FileNotFoundException {
+    public static Config load(File file) throws IOException {
         Reader reader = new FileReader(file);
         Gson gson = new Gson();
         Map<String, Object> deserialised = gson.fromJson(reader, new TypeToken<HashMap<String, Object>>() {}.getType());
+        reader.close();
         Map<String, Object> config = new HashMap<>();
         config.putAll(deserialised);
         return new Config(config);
@@ -92,7 +93,9 @@ public class Config {
             }
         }
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
-        gson.toJson(config, new FileWriter(file));
+        FileWriter configWriter = new FileWriter(file);
+        gson.toJson(config, configWriter);
+        configWriter.close();
     }
 
 }
