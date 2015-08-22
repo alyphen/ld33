@@ -19,7 +19,10 @@ package com.seventh_root.ld33.server.network;
 import com.seventh_root.ld33.common.network.packet.clientbound.PlayerLoginResponseClientBoundPacket;
 import com.seventh_root.ld33.common.network.packet.clientbound.PlayerQuitClientBoundPacket;
 import com.seventh_root.ld33.common.network.packet.clientbound.PublicKeyClientBoundPacket;
-import com.seventh_root.ld33.common.network.packet.serverbound.*;
+import com.seventh_root.ld33.common.network.packet.serverbound.PlayerJoinServerBoundPacket;
+import com.seventh_root.ld33.common.network.packet.serverbound.PlayerLoginServerBoundPacket;
+import com.seventh_root.ld33.common.network.packet.serverbound.PlayerQuitServerBoundPacket;
+import com.seventh_root.ld33.common.network.packet.serverbound.PublicKeyServerBoundPacket;
 import com.seventh_root.ld33.server.LD33Server;
 import com.seventh_root.ld33.server.player.Player;
 import io.netty.channel.ChannelHandler.Sharable;
@@ -29,8 +32,9 @@ import io.netty.channel.group.ChannelGroup;
 import io.netty.channel.group.DefaultChannelGroup;
 import io.netty.util.AttributeKey;
 import io.netty.util.concurrent.GlobalEventExecutor;
-import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang.RandomStringUtils;
+
+import static org.apache.commons.codec.digest.DigestUtils.sha256Hex;
 
 @Sharable
 public class LD33ServerHandler extends ChannelHandlerAdapter {
@@ -70,9 +74,8 @@ public class LD33ServerHandler extends ChannelHandlerAdapter {
                 if (Player.getByName(server.getDatabaseConnection(), packet.getPlayerName()) == null) {
                     String playerName = packet.getPlayerName();
                     String password = server.getEncryptionManager().decrypt(packet.getEncryptedPassword());
-                    String passwordSalt = RandomStringUtils.random(32);
-                    String passwordHash = DigestUtils.sha256Hex(password + passwordSalt);
-                    Player player = new Player(server.getDatabaseConnection(), playerName, passwordHash, passwordSalt);
+                    System.out.println(password);
+                    Player player = new Player(server.getDatabaseConnection(), playerName, password);
                     ctx.channel().attr(PLAYER).set(player);
                     ctx.writeAndFlush(new PlayerLoginResponseClientBoundPacket("Sign up successful. Entering the game world...", true));
                 } else {

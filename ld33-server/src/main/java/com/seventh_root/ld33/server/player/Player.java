@@ -37,11 +37,10 @@ public class Player implements DatabaseEntity {
     private String passwordHash;
     private String passwordSalt;
 
-    public Player(Connection databaseConnection, String name, String passwordHash, String passwordSalt) throws SQLException {
+    public Player(Connection databaseConnection, String name, String password) throws SQLException {
         this.databaseConnection = databaseConnection;
         this.name = name;
-        this.passwordHash = passwordHash;
-        this.passwordSalt = passwordSalt;
+        setPassword(password);
         insert();
     }
 
@@ -71,7 +70,6 @@ public class Player implements DatabaseEntity {
 
     public void setName(String name) throws SQLException {
         this.name = name;
-        update();
     }
 
     public String getPasswordHash() {
@@ -83,9 +81,8 @@ public class Player implements DatabaseEntity {
     }
 
     public void setPassword(String password) throws SQLException {
-        passwordSalt = RandomStringUtils.random(32);
+        passwordSalt = RandomStringUtils.randomAlphanumeric(32);
         passwordHash = DigestUtils.sha256Hex(password + passwordSalt);
-        update();
     }
 
     public boolean checkPassword(String password) {
@@ -145,7 +142,7 @@ public class Player implements DatabaseEntity {
         statement.setString(1, playerName);
         ResultSet resultSet = statement.executeQuery();
         if (resultSet.next()) {
-            return new Player(databaseConnection, resultSet.getString("name"), resultSet.getString("password_hash"), resultSet.getString("password_salt"));
+            return new Player(databaseConnection, UUID.fromString(resultSet.getString("uuid")), resultSet.getString("name"), resultSet.getString("password_hash"), resultSet.getString("password_salt"));
         } else {
             return null;
         }
