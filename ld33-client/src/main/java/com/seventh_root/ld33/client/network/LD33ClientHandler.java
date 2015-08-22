@@ -18,6 +18,9 @@ package com.seventh_root.ld33.client.network;
 
 import com.seventh_root.ld33.client.LD33Client;
 import io.netty.channel.ChannelHandlerAdapter;
+import io.netty.channel.ChannelHandlerContext;
+
+import static javax.swing.JOptionPane.showMessageDialog;
 
 public class LD33ClientHandler extends ChannelHandlerAdapter {
 
@@ -26,4 +29,26 @@ public class LD33ClientHandler extends ChannelHandlerAdapter {
     public LD33ClientHandler(LD33Client client) {
         this.client = client;
     }
+
+    @Override
+    public void channelActive(ChannelHandlerContext ctx) throws Exception {
+
+    }
+
+    @Override
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+        showMessageDialog(null, "Disconnected from the server");
+        System.exit(0);
+    }
+
+    @Override
+    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+
+    }
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+
+    }
+
 }
