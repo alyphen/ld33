@@ -19,6 +19,16 @@ package com.seventh_root.ld33.server;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.seventh_root.ld33.server.network.LD33ClientBoundPacketEncoder;
+import com.seventh_root.ld33.server.network.LD33ServerBoundPacketDecoder;
+import com.seventh_root.ld33.server.network.LD33ServerHandler;
+import io.netty.bootstrap.ServerBootstrap;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.SocketChannel;
+import io.netty.channel.socket.nio.NioServerSocketChannel;
 
 import java.io.*;
 import java.util.HashMap;
@@ -30,13 +40,14 @@ import static java.util.logging.Level.SEVERE;
 
 public class LD33Server {
 
+    private LD33ServerHandler handler;
     private Map<String, Object> config;
     private Logger logger;
     private boolean running;
     private static final long DELAY = 25L;
 
     public static void main(String[] args) {
-        new LD33Server().start();
+        new Thread(() -> new LD33Server().start()).start();
     }
 
     public Map<String, Object> getConfig() {
@@ -61,21 +72,46 @@ public class LD33Server {
     }
 
     public void start() {
-        setRunning(true);
-        long beforeTime, timeDiff, sleep;
-        beforeTime = currentTimeMillis();
-        while (isRunning()) {
-            doTick();
-            timeDiff = currentTimeMillis() - beforeTime;
-            sleep = DELAY - timeDiff;
-            if (sleep > 0) {
-                try {
-                    Thread.sleep(sleep);
-                } catch (InterruptedException exception) {
-                    getLogger().log(SEVERE, "Thread interrupted", exception);
-                }
-            }
+        EventLoopGroup bossGroup = new NioEventLoopGroup();
+        EventLoopGroup workerGroup = new NioEventLoopGroup();
+        try {
+            ServerBootstrap bootstrap = new ServerBootstrap();
+            handler = new LD33ServerHandler(this);
+            bootstrap.group(bossGroup, workerGroup)
+                    .channel(NioServerSocketChannel.class)
+                    .childHandler(new ChannelInitializer<SocketChannel>() {
+                        @Override
+                        public void initChannel(SocketChannel channel) throws Exception {
+                            channel.pipeline().addLast(
+                                    new LD33ClientBoundPacketEncoder(),
+                                    new LD33ServerBoundPacketDecoder(),
+                                    handler
+                            );
+                        }
+                    });
+            Channel channel = bootstrap.bind((int) ((double) getConfig().get("port"))).sync().channel();
+            setRunning(true);
+            long beforeTime, timeDiff, sleep;
             beforeTime = currentTimeMillis();
+            while (isRunning()) {
+                doTick();
+                timeDiff = currentTimeMillis() - beforeTime;
+                sleep = DELAY - timeDiff;
+                if (sleep > 0) {
+                    try {
+                        Thread.sleep(sleep);
+                    } catch (InterruptedException exception) {
+                        getLogger().log(SEVERE, "Thread interrupted", exception);
+                    }
+                }
+                beforeTime = currentTimeMillis();
+            }
+            channel.closeFuture().sync();
+        } catch (InterruptedException exception) {
+            exception.printStackTrace();
+        } finally {
+            bossGroup.shutdownGracefully();
+            workerGroup.shutdownGracefully();
         }
     }
 
@@ -114,7 +150,7 @@ public class LD33Server {
         if (!configFile.exists()) {
             Gson gson = new GsonBuilder().setPrettyPrinting().create();
             Map<String, Object> defaultConfig = new HashMap<>();
-            defaultConfig.put("port", "37896");
+            defaultConfig.put("port", 37896);
             gson.toJson(defaultConfig, new FileWriter(configFile));
         }
     }
