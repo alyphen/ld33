@@ -25,7 +25,7 @@ public abstract class Packet {
     public abstract int getId();
 
     public void write(ByteBuf buf) throws UnsupportedEncodingException {
-        buf.writeByte(getId());
+        buf.writeInt(getId());
     }
 
     public void writeString(ByteBuf buf, String string) throws UnsupportedEncodingException {

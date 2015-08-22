@@ -17,6 +17,8 @@
 package com.seventh_root.ld33.server.player;
 
 import com.seventh_root.ld33.common.database.DatabaseEntity;
+import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.lang.RandomStringUtils;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -67,12 +69,23 @@ public class Player implements DatabaseEntity {
         return name;
     }
 
+    public void setName(String name) throws SQLException {
+        this.name = name;
+        update();
+    }
+
     public String getPasswordHash() {
         return passwordHash;
     }
 
     public String getPasswordSalt() {
         return passwordSalt;
+    }
+
+    public void setPassword(String password) throws SQLException {
+        passwordSalt = RandomStringUtils.random(32);
+        passwordHash = DigestUtils.sha256Hex(password + passwordSalt);
+        update();
     }
 
     public boolean checkPassword(String password) {
@@ -120,6 +133,19 @@ public class Player implements DatabaseEntity {
         ResultSet resultSet = statement.executeQuery();
         if (resultSet.next()) {
             return new Player(databaseConnection, UUID.fromString(resultSet.getString("uuid")), resultSet.getString("name"), resultSet.getString("password_hash"), resultSet.getString("password_salt"));
+        } else {
+            return null;
+        }
+    }
+
+    public static Player getByName(Connection databaseConnection, String playerName) throws SQLException {
+        PreparedStatement statement = databaseConnection.prepareStatement(
+                "SELECT uuid, name, password_hash, password_salt FROM player WHERE name = ? LIMIT 1"
+        );
+        statement.setString(1, playerName);
+        ResultSet resultSet = statement.executeQuery();
+        if (resultSet.next()) {
+            return new Player(databaseConnection, resultSet.getString("name"), resultSet.getString("password_hash"), resultSet.getString("password_salt"));
         } else {
             return null;
         }

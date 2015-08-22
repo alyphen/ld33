@@ -142,6 +142,22 @@ public class LD33Client extends JPanel {
         return encryptionManager;
     }
 
+    public ConnectionPanel getConnectionPanel() {
+        return connectionPanel;
+    }
+
+    public LoginPanel getLoginPanel() {
+        return loginPanel;
+    }
+
+    public WorldPanel getWorldPanel() {
+        return worldPanel;
+    }
+
+    public void showPanel(String panel) {
+        ((CardLayout) getLayout()).show(this, panel);
+    }
+
     public void sendPacket(ServerBoundPacket packet) {
         channel.writeAndFlush(packet);
     }
@@ -152,5 +168,9 @@ public class LD33Client extends JPanel {
 
     public void setPlayerName(String playerName) {
         this.playerName = playerName;
+    }
+
+    public void setServerPublicKey(byte[] serverPublicKey) {
+        this.serverPublicKey = serverPublicKey;
     }
 }

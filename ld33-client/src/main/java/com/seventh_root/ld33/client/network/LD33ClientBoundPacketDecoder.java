@@ -47,7 +47,9 @@ public class LD33ClientBoundPacketDecoder extends ByteToMessageDecoder {
                     out.add(new PlayerQuitClientBoundPacket(quittingPlayerName));
                     break;
                 case 4:
-                    out.add(new PingClientBoundPacket());
+                    String loginResponseMessage = readString(in);
+                    boolean success = in.readBoolean();
+                    out.add(new PlayerLoginResponseClientBoundPacket(loginResponseMessage, success));
                     break;
             }
         }

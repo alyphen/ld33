@@ -17,6 +17,8 @@
 package com.seventh_root.ld33.client.network;
 
 import com.seventh_root.ld33.client.LD33Client;
+import com.seventh_root.ld33.common.network.packet.clientbound.*;
+import com.seventh_root.ld33.common.network.packet.serverbound.PublicKeyServerBoundPacket;
 import io.netty.channel.ChannelHandlerAdapter;
 import io.netty.channel.ChannelHandlerContext;
 
@@ -43,7 +45,26 @@ public class LD33ClientHandler extends ChannelHandlerAdapter {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-
+        System.out.println(msg.getClass().getName());
+        if (msg instanceof PublicKeyClientBoundPacket) {
+            ctx.writeAndFlush(new PublicKeyServerBoundPacket(client.getEncryptionManager().getKeyPair().getPublic().getEncoded()));
+            PublicKeyClientBoundPacket packet = (PublicKeyClientBoundPacket) msg;
+            client.setServerPublicKey(packet.getEncodedPublicKey());
+            client.showPanel("login");
+        } else if (msg instanceof PlayerLoginClientBoundPacket) {
+            // Not sure whether I'll use this one
+        } else if (msg instanceof PlayerJoinClientBoundPacket) {
+            //TODO
+        } else if (msg instanceof PlayerQuitClientBoundPacket) {
+            //TODO
+        } else if (msg instanceof PlayerLoginResponseClientBoundPacket) {
+            PlayerLoginResponseClientBoundPacket packet = (PlayerLoginResponseClientBoundPacket) msg;
+            client.getLoginPanel().setStatusMessage(packet.getMessage());
+            client.getLoginPanel().reEnableLoginButtons();
+            if (packet.isSuccess()) {
+                client.showPanel("world");
+            }
+        }
     }
 
     @Override

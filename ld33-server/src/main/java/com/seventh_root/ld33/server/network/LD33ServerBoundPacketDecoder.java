@@ -38,18 +38,20 @@ public class LD33ServerBoundPacketDecoder extends ByteToMessageDecoder {
                 case 1:
                     String loggingInPlayerName = readString(in);
                     byte[] encryptedPassword = new byte[in.readInt()];
+                    in.readBytes(encryptedPassword);
                     boolean signUp = in.readBoolean();
                     out.add(new PlayerLoginServerBoundPacket(loggingInPlayerName, encryptedPassword, signUp));
                     break;
                 case 2:
-                    String joiningPlayerName = readString(in);
-                    out.add(new PlayerJoinServerBoundPacket(joiningPlayerName));
+                    out.add(new PlayerJoinServerBoundPacket());
                     break;
                 case 3:
                     out.add(new PlayerQuitServerBoundPacket());
                     break;
                 case 4:
-                    out.add(new PingServerBoundPacket());
+                    String loginResponseMessage = readString(in);
+                    boolean success = in.readBoolean();
+                    out.add(new PlayerLoginResponseServerBoundPacket(loginResponseMessage, success));
                     break;
             }
         }

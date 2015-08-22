@@ -16,11 +16,37 @@
 
 package com.seventh_root.ld33.common.network.packet.clientbound;
 
-public class PingClientBoundPacket extends ClientBoundPacket {
+import io.netty.buffer.ByteBuf;
+
+import java.io.UnsupportedEncodingException;
+
+public class PlayerLoginResponseClientBoundPacket extends ClientBoundPacket {
+
+    private String message;
+    private boolean success;
+
+    public PlayerLoginResponseClientBoundPacket(String message, boolean success) {
+        this.message = message;
+        this.success = success;
+    }
 
     @Override
     public int getId() {
         return 4;
     }
 
+    public String getMessage() {
+        return message;
+    }
+
+    public boolean isSuccess() {
+        return success;
+    }
+
+    @Override
+    public void write(ByteBuf buf) throws UnsupportedEncodingException {
+        super.write(buf);
+        writeString(buf, getMessage());
+        buf.writeBoolean(isSuccess());
+    }
 }

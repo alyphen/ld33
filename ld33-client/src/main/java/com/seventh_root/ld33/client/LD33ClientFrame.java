@@ -37,7 +37,7 @@ public class LD33ClientFrame extends JFrame {
     public LD33ClientFrame() {
         setTitle("LD33");
         setFocusable(true);
-        add(new LD33Client());
+        add(new LD33Client(this));
         pack();
         setLocationRelativeTo(null);
         setDefaultCloseOperation(EXIT_ON_CLOSE);

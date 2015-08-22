@@ -16,8 +16,6 @@
 
 package com.seventh_root.ld33.server;
 
-import com.google.common.reflect.TypeToken;
-import com.google.gson.Gson;
 import com.seventh_root.ld33.common.encrypt.EncryptionManager;
 import com.seventh_root.ld33.server.config.Config;
 import com.seventh_root.ld33.server.network.LD33ClientBoundPacketEncoder;
@@ -31,11 +29,12 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.HashMap;
 import java.util.logging.Logger;
 
 import static java.lang.System.currentTimeMillis;
@@ -55,12 +54,35 @@ public class LD33Server {
         new Thread(() -> new LD33Server().start()).start();
     }
 
+    public LD33Server() {
+        logger = Logger.getLogger(getClass().getCanonicalName());
+        loadConfig();
+        try {
+            databaseConnection = DriverManager.getConnection(
+                    "jdbc:mysql://" + getConfig().getMap("database").get("url") + "/" + getConfig().getMap("database").get("database"),
+                    (String) getConfig().getMap("database").get("user"),
+                    (String) getConfig().getMap("database").get("password")
+            );
+        } catch (SQLException exception) {
+            getLogger().log(SEVERE, "Failed to connect to database", exception);
+        }
+        encryptionManager = new EncryptionManager();
+    }
+
     public Config getConfig() {
         return config;
     }
 
+    public Connection getDatabaseConnection() {
+        return databaseConnection;
+    }
+
     public Logger getLogger() {
         return logger;
+    }
+
+    public EncryptionManager getEncryptionManager() {
+        return encryptionManager;
     }
 
     public boolean isRunning() {
@@ -69,21 +91,6 @@ public class LD33Server {
 
     public void setRunning(boolean running) {
         this.running = running;
-    }
-
-    public LD33Server() {
-        loadConfig();
-        try {
-            databaseConnection = DriverManager.getConnection(
-                    "jdbc:mysql://" + getConfig().getString("database.url") + "/" + getConfig().getString("database.table"),
-                    getConfig().getString("database.user"),
-                    getConfig().getString("database.password")
-            );
-        } catch (SQLException exception) {
-            getLogger().log(SEVERE, "Failed to connect to database", exception);
-        }
-        logger = Logger.getLogger(getClass().getCanonicalName());
-        encryptionManager = new EncryptionManager();
     }
 
     private void start() {
@@ -142,9 +149,7 @@ public class LD33Server {
             getLogger().log(SEVERE, "Failed to create default config", exception);
         }
         try {
-            Reader reader = new FileReader(configFile);
-            Gson gson = new Gson();
-            config = gson.fromJson(reader, new TypeToken<HashMap<String, Object>>() {}.getType());
+            config = Config.load(configFile);
         } catch (FileNotFoundException exception) {
             getLogger().log(SEVERE, "Failed to find configuration", exception);
         }
@@ -154,6 +159,10 @@ public class LD33Server {
         if (!configFile.exists()) {
             Config defaultConfig = new Config();
             defaultConfig.set("port", 37896);
+            defaultConfig.set("database.url", "localhost");
+            defaultConfig.set("database.database", "ld33");
+            defaultConfig.set("database.user", "ld33");
+            defaultConfig.set("database.password", "secret");
             defaultConfig.save(configFile);
         }
     }

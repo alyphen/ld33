@@ -29,7 +29,10 @@ public class Config {
     public static Config load(File file) throws FileNotFoundException {
         Reader reader = new FileReader(file);
         Gson gson = new Gson();
-        return new Config(gson.fromJson(reader, new TypeToken<HashMap<String, Object>>() {}.getType()));
+        Map<String, Object> deserialised = gson.fromJson(reader, new TypeToken<HashMap<String, Object>>() {}.getType());
+        Map<String, Object> config = new HashMap<>();
+        config.putAll(deserialised);
+        return new Config(config);
     }
 
     private Map<String, Object> config;
@@ -46,22 +49,7 @@ public class Config {
         config.put(key, value);
     }
 
-    public Config getSection(String key) {
-        if (config.containsKey(key) && config.get(key) instanceof Map) {
-            return new Config((Map<String, Object>) config.get(key));
-        }
-        return null;
-    }
-
     public Object get(String key, Object defaultValue) {
-        if (key.contains(".")) {
-            Config subsection = getSection(key.substring(0, key.indexOf(".")));
-            if (subsection != null) {
-                return subsection.get(key.substring(key.indexOf(".")), defaultValue);
-            } else {
-                return defaultValue;
-            }
-        }
         if (config.containsKey(key)) {
             return config.get(key);
         }
@@ -88,6 +76,10 @@ public class Config {
         return getString(key, "");
     }
 
+    public Map<String, Object> getMap(String key) {
+        return (Map<String, Object>) get(key);
+    }
+
     public void save(File file) throws IOException {
         if (!file.getParentFile().isDirectory()) {
             if (!file.getParentFile().delete()) {
@@ -99,10 +91,8 @@ public class Config {
                 throw new IOException("Failed to create directory " + file.getParentFile().getPath() + ": do you have permission?");
             }
         }
-        if (!file.exists()) {
-            Gson gson = new GsonBuilder().setPrettyPrinting().create();
-            gson.toJson(config, new FileWriter(file));
-        }
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        gson.toJson(config, new FileWriter(file));
     }
 
 }
