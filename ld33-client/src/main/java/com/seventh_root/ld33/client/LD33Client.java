@@ -18,6 +18,7 @@ package com.seventh_root.ld33.client;
 
 import com.seventh_root.ld33.client.network.LD33ClientHandler;
 import com.seventh_root.ld33.client.panel.*;
+import com.seventh_root.ld33.client.sound.SoundPlayer;
 import com.seventh_root.ld33.client.texture.TextureManager;
 import com.seventh_root.ld33.common.economy.EconomyManager;
 import com.seventh_root.ld33.common.encrypt.EncryptionManager;
@@ -53,6 +54,8 @@ public class LD33Client extends JPanel {
     private TextureManager textureManager;
     private EconomyManager economyManager;
 
+    private SoundPlayer soundPlayer;
+
     private ConnectionPanel connectionPanel;
     private LoginPanel loginPanel;
     private WorldPanel worldPanel;
@@ -78,6 +81,8 @@ public class LD33Client extends JPanel {
         textureManager = new TextureManager(this);
         economyManager = new EconomyManager();
 
+        soundPlayer = new SoundPlayer();
+
         setLayout(new CardLayout());
         connectionPanel = new ConnectionPanel(this);
         add(connectionPanel, "connect");
@@ -88,6 +93,8 @@ public class LD33Client extends JPanel {
         shopPanel = new ShopPanel(this);
         gamePanel = new GamePanel(this);
         add(gamePanel, "game");
+        new Thread(() -> getSoundPlayer().loop("/ld33.ogg")).start();
+
     }
 
     public boolean isRunning() {
@@ -216,6 +223,10 @@ public class LD33Client extends JPanel {
 
     public void setPlayer(Player player) {
         this.player = player;
+    }
+
+    public SoundPlayer getSoundPlayer() {
+        return soundPlayer;
     }
 
 }
