@@ -127,7 +127,11 @@ public class WorldPanel extends JPanel {
                             }
                             frontGraphics.drawImage(texture, (x * 64) + unit.getXOffset(), (y * 64) + unit.getYOffset(), null);
                         } else if (unit instanceof Wall) {
-                            frontGraphics.drawImage(client.getTextureManager().getTexture("tower"), (x * 64) + unit.getXOffset(), (y * 64) + unit.getYOffset() - 128, null);
+                            if (unit.isComplete()) {
+                                frontGraphics.drawImage(client.getTextureManager().getTexture("tower"), (x * 64) + unit.getXOffset(), (y * 64) + unit.getYOffset() - 128, null);
+                            } else {
+                                frontGraphics.drawImage(client.getTextureManager().getTexture("wall_in_progress"), (x * 64) + unit.getXOffset(), (y * 64) + unit.getYOffset() - 64, null);
+                            }
                         }
                     }
                 }
