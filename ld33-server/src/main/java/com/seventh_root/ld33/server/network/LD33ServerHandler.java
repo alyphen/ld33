@@ -140,13 +140,15 @@ public class LD33ServerHandler extends ChannelHandlerAdapter {
             Unit unit = Unit.getByUUID(server.getDatabaseConnection(), server.getWorld(), packet.getUnitUUID());
             if (unit != null) {
                 Tile tile = server.getWorld().getTileAt(packet.getTargetX(), packet.getTargetY());
-                unit.moveTo(tile);
-                if (tile.getUnit() != null) {
-                    if (tile.getUnit().getPlayerUUID().toString().equals(ctx.channel().attr(PLAYER).get().getUUID().toString())) {
-                        ctx.writeAndFlush(new ChatMessageClientBoundPacket("You cannot destroy your own buildings!"));
+                if (tile != null) {
+                    unit.moveTo(tile);
+                    if (tile.getUnit() != null) {
+                        if (tile.getUnit().getPlayerUUID().toString().equals(ctx.channel().attr(PLAYER).get().getUUID().toString())) {
+                            ctx.writeAndFlush(new ChatMessageClientBoundPacket("You cannot destroy your own buildings!"));
+                        }
                     }
+                    channels.writeAndFlush(new UnitMoveClientBoundPacket(unit, unit.getTile().getX(), unit.getTile().getY(), packet.getTargetX(), packet.getTargetY()));
                 }
-                channels.writeAndFlush(new UnitMoveClientBoundPacket(unit, unit.getTile().getX(), unit.getTile().getY(), packet.getTargetX(), packet.getTargetY()));
             }
         } else if (msg instanceof ChatMessageServerBoundPacket) {
             ChatMessageServerBoundPacket packet = (ChatMessageServerBoundPacket) msg;
