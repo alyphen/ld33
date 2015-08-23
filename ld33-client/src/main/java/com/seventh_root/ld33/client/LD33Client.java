@@ -147,6 +147,7 @@ public class LD33Client extends JPanel {
 
     private void doTick() {
         getWorldPanel().onTick();
+        getShopPanel().onTick();
     }
 
     public Logger getLogger() {

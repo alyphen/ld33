@@ -85,7 +85,7 @@ public class ShopPanel extends JPanel {
         graphics.fillRoundRect(16, getHeight() - 32, getWidth() - 32, 64, 16, 16);
         graphics.drawImage(client.getTextureManager().getTexture("resources"), 24, getHeight() - 24, null);
         graphics.setColor(Color.WHITE);
-        graphics.drawString(Integer.toString(client.getPlayer().getResources()), 48, getHeight() - 24 + graphics.getFontMetrics().getMaxAscent());
+        if (client.getPlayer() != null) graphics.drawString(Integer.toString(client.getPlayer().getResources()), 48, getHeight() - 24 + graphics.getFontMetrics().getMaxAscent());
     }
 
     public ShopItem getSelectedItem() {
@@ -94,6 +94,10 @@ public class ShopPanel extends JPanel {
 
     public void setSelectedItem(ShopItem selectedItem) {
         this.selectedItem = selectedItem;
+    }
+
+    public void onTick() {
+        repaint();
     }
 
 }

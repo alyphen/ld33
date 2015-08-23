@@ -29,7 +29,9 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
 import java.awt.image.BufferedImage;
 import java.sql.SQLException;
+import java.util.Random;
 
+import static java.lang.Math.*;
 import static java.util.logging.Level.WARNING;
 import static javax.swing.SwingUtilities.*;
 
@@ -100,12 +102,15 @@ public class WorldPanel extends JPanel {
         Graphics2D backGraphics = backImage.createGraphics();
         BufferedImage frontImage = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_ARGB);
         Graphics2D frontGraphics = frontImage.createGraphics();
+        BufferedImage particleImage = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_ARGB);
+        Graphics2D particleGraphics = particleImage.createGraphics();
         Graphics2D graphics2D = (Graphics2D) graphics;
         graphics.setColor(Color.BLACK);
         graphics.fillRect(0, 0, getWidth(), getHeight());
         graphics2D.translate(-cameraX, -cameraY);
         backGraphics.translate(-cameraX, -cameraY);
         frontGraphics.translate(-cameraX, -cameraY);
+        particleGraphics.translate(-cameraX, -cameraY);
         for (int y = cameraY / 64; y < (cameraY / 64) + (getHeight() / 64) + 2; y++) {
             for (int x = cameraX / 64; x < (cameraX / 64) + (getWidth() / 64) + 2; x++) {
                 Tile tile = world.getTileAt(x, y);
@@ -127,6 +132,30 @@ public class WorldPanel extends JPanel {
                                 texture = currentDragonFrame == 0 ? client.getTextureManager().getTexture("dragon_down_1") : client.getTextureManager().getTexture("dragon_down_2");
                             }
                             frontGraphics.drawImage(texture, (x * 64) + unit.getXOffset(), (y * 64) + unit.getYOffset(), null);
+                            particleGraphics.setColor(Color.BLACK);
+                            if (unit.getAttackTarget() != null && (abs(unit.getAttackTarget().getTile().getX() - unit.getTile().getX()) == 1 || abs(unit.getAttackTarget().getTile().getY() - unit.getTile().getY()) == 1)) {
+                                int xStart = min(unit.getTile().getX(), unit.getAttackTarget().getTile().getX());
+                                int xEnd = max(unit.getTile().getX(), unit.getAttackTarget().getTile().getX());
+                                int yStart = min(unit.getTile().getY(), unit.getAttackTarget().getTile().getY());
+                                int yEnd = max(unit.getTile().getY(), unit.getAttackTarget().getTile().getY());
+                                Random random = new Random();
+                                for (int pX = (xStart * 64) + 28; pX < (xEnd * 64) + 34; pX++) {
+                                    for (int pY = (yStart * 64) + 28; pY < (yEnd * 64) + 34; pY++) {
+                                        switch (random.nextInt(3)) {
+                                            case 0:
+                                                particleGraphics.setColor(Color.RED);
+                                                break;
+                                            case 1:
+                                                particleGraphics.setColor(Color.ORANGE);
+                                                break;
+                                            case 2:
+                                                particleGraphics.setColor(Color.YELLOW);
+                                                break;
+                                        }
+                                        particleGraphics.fillOval(pX - 3 + random.nextInt(3), pY - 3 + random.nextInt(3), 4, 4);
+                                    }
+                                }
+                            }
                         } else if (unit instanceof Wall) {
                             TextureManager textureManager = client.getTextureManager();
                             BufferedImage texture = textureManager.getTexture("tower");
@@ -225,12 +254,16 @@ public class WorldPanel extends JPanel {
         graphics2D.translate(cameraX, cameraY);
         backGraphics.translate(cameraX, cameraY);
         frontGraphics.translate(cameraX, cameraY);
+        particleGraphics.translate(cameraX, cameraY);
         graphics.drawImage(backImage, 0, 0, null);
         graphics.drawImage(frontImage, 0, 0, null);
+        graphics.drawImage(particleImage, 0, 0, null);
         backGraphics.dispose();
         frontGraphics.dispose();
+        particleGraphics.dispose();
         backImage.flush();
         frontImage.flush();
+        particleImage.flush();
     }
 
     public World getWorld() {
