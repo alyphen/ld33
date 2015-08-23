@@ -27,8 +27,10 @@ public class EconomyManager {
     public EconomyManager() {
         resourceCosts = new HashMap<>();
         resourceCosts.put("wall", 10);
+        resourceCosts.put("flag", 100);
         timeCosts = new HashMap<>();
         timeCosts.put("wall", 2);
+        timeCosts.put("flag", 0);
     }
 
     public int getResourceCost(String unitType) {

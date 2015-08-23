@@ -293,10 +293,13 @@ public abstract class Unit implements DatabaseEntity {
                     if (getAttackTarget().getDatabaseConnection() != null) getAttackTarget().update();
                 }
             } else {
+                if (getAttackTarget() instanceof Wall)
+                    getPlayer().setResources(getPlayer().getResources() + 15);
+                else if (getAttackTarget() instanceof Flag)
+                    getPlayer().setResources(getPlayer().getResources() + 150);
                 getAttackTarget().getTile().setUnit(null);
                 if (getDatabaseConnection() != null) getAttackTarget().delete();
                 setAttackTarget(null);
-                getPlayer().setResources(getPlayer().getResources() + 15);
                 if (getPlayer().getDatabaseConnection() != null) getPlayer().update();
             }
         }
@@ -340,6 +343,8 @@ public abstract class Unit implements DatabaseEntity {
                 return new Wall(databaseConnection, UUID.fromString(resultSet.getString("uuid")), Player.getByUUID(databaseConnection, UUID.fromString(resultSet.getString("player_uuid"))), resultSet.getInt("health"), world.getTileAt(resultSet.getInt("x"), resultSet.getInt("y")), resultSet.getLong("completion_time"));
             case "dragon":
                 return new Dragon(databaseConnection, UUID.fromString(resultSet.getString("uuid")), Player.getByUUID(databaseConnection, UUID.fromString(resultSet.getString("player_uuid"))), resultSet.getInt("health"), world.getTileAt(resultSet.getInt("x"), resultSet.getInt("y")), resultSet.getLong("completion_time"));
+            case "flag":
+                return new Flag(databaseConnection, UUID.fromString(resultSet.getString("uuid")), Player.getByUUID(databaseConnection, UUID.fromString(resultSet.getString("player_uuid"))), resultSet.getInt("health"), world.getTileAt(resultSet.getInt("x"), resultSet.getInt("y")), resultSet.getLong("completion_time"));
         }
         return null;
     }

@@ -19,10 +19,7 @@ package com.seventh_root.ld33.server.network;
 import com.seventh_root.ld33.common.network.packet.clientbound.*;
 import com.seventh_root.ld33.common.network.packet.serverbound.*;
 import com.seventh_root.ld33.common.player.Player;
-import com.seventh_root.ld33.common.world.Dragon;
-import com.seventh_root.ld33.common.world.Tile;
-import com.seventh_root.ld33.common.world.Unit;
-import com.seventh_root.ld33.common.world.Wall;
+import com.seventh_root.ld33.common.world.*;
 import com.seventh_root.ld33.server.LD33Server;
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelHandlerAdapter;
@@ -80,21 +77,24 @@ public class LD33ServerHandler extends ChannelHandlerAdapter {
                     ctx.writeAndFlush(new PlayerLoginResponseClientBoundPacket("Sign up successful. Entering the game world...", true));
                     channels.writeAndFlush(new PlayerJoinClientBoundPacket(player.getUUID(), player.getName(), player.getResources()));
                     Random random = new Random();
-                    int startX = random.nextInt(server.getWorld().getWidth());
-                    int startY = random.nextInt(server.getWorld().getHeight());
+                    int startX = random.nextInt(server.getWorld().getWidth() - 1) + 1;
+                    int startY = random.nextInt(server.getWorld().getHeight() - 1) + 1;
                     Tile startTile = server.getWorld().getTileAt(startX, startY);
                     while (startTile.getUnit() != null) {
-                        startX = random.nextInt(server.getWorld().getWidth());
-                        startY = random.nextInt(server.getWorld().getHeight());
+                        startX = random.nextInt(server.getWorld().getWidth() - 1) + 1;
+                        startY = random.nextInt(server.getWorld().getHeight() - 1) + 1;
                         startTile = server.getWorld().getTileAt(startX, startY);
                     }
                     Dragon dragon = new Dragon(server.getDatabaseConnection(), player, startTile, System.currentTimeMillis());
                     startTile.setUnit(dragon);
+                    Flag flag = new Flag(server.getDatabaseConnection(), player, startTile.getAdjacent(0, -1), System.currentTimeMillis());
+                    startTile.getAdjacent(0, -1).setUnit(flag);
                     sendWorldInfo(ctx);
                     sendUnits(ctx);
                     channels.stream().filter(channel -> channel != ctx.channel()).forEach(channel -> {
                         try {
                             channel.writeAndFlush(new UnitSpawnClientBoundPacket(dragon));
+                            channel.writeAndFlush(new UnitSpawnClientBoundPacket(flag));
                         } catch (SQLException exception) {
                             server.getLogger().log(SEVERE, "Failed to send unit spawn packet", exception);
                         }
@@ -162,9 +162,18 @@ public class LD33ServerHandler extends ChannelHandlerAdapter {
                 if (player.getResources() >= cost) {
                     player.setResources(player.getResources() - cost);
                     player.update();
-                    Wall wall = new Wall(server.getDatabaseConnection(), player, tile, System.currentTimeMillis() + (server.getEconomyManager().getTimeCost(packet.getUnitType()) * 60000));
-                    wall.getTile().setUnit(wall);
-                    channels.writeAndFlush(new UnitSpawnClientBoundPacket(wall));
+                    switch (packet.getUnitType()) {
+                        case "wall":
+                            Wall wall = new Wall(server.getDatabaseConnection(), player, tile, System.currentTimeMillis() + (server.getEconomyManager().getTimeCost(packet.getUnitType()) * 60000));
+                            wall.getTile().setUnit(wall);
+                            channels.writeAndFlush(new UnitSpawnClientBoundPacket(wall));
+                            break;
+                        case "flag":
+                            Flag flag = new Flag(server.getDatabaseConnection(), player, tile, System.currentTimeMillis() + (server.getEconomyManager().getTimeCost(packet.getUnitType()) * 60000));
+                            flag.getTile().setUnit(flag);
+                            channels.writeAndFlush(new UnitSpawnClientBoundPacket(flag));
+                            break;
+                    }
                 } else {
                     ctx.writeAndFlush(new ChatMessageClientBoundPacket("You do not have the resources to build that."));
                 }

@@ -23,34 +23,34 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.UUID;
 
-public class Wall extends Unit {
+public class Flag extends Unit {
 
-    public Wall(Connection databaseConnection, Player player, Tile tile, long completionTime) throws SQLException {
-        super(databaseConnection, player, 100, 100, true, tile, completionTime);
+    public Flag(Connection databaseConnection, Player player, Tile tile, long completionTime) throws SQLException {
+        super(databaseConnection, player, 25, 25, true, tile, completionTime);
         insert();
     }
 
-    public Wall(UUID uuid, Player player, Tile tile, long completionTime) {
-        super(player, 100, 100, true, tile, completionTime);
+    public Flag(UUID uuid, Player player, Tile tile, long completionTime) {
+        super(player, 25, 25, true, tile, completionTime);
         setUUID(uuid);
     }
 
-    public Wall(Connection databaseConnection, UUID playerUUID, Tile tile, long completionTime) throws SQLException {
-        super(databaseConnection, playerUUID, 100, 100, true, tile, completionTime);
+    public Flag(Connection databaseConnection, UUID playerUUID, Tile tile, long completionTime) throws SQLException {
+        super(databaseConnection, playerUUID, 25, 25, true, tile, completionTime);
         insert();
     }
 
-    public Wall(Connection databaseConnection, UUID uuid, UUID playerUUID, Tile tile, long completionTime) {
-        super(databaseConnection, uuid, playerUUID, 100, 100, true, tile, completionTime);
+    public Flag(Connection databaseConnection, UUID uuid, UUID playerUUID, Tile tile, long completionTime) {
+        super(databaseConnection, uuid, playerUUID, 25, 25, true, tile, completionTime);
     }
 
-    public Wall(UUID uuid, UUID playerUUID, Tile tile, long completionTime) {
-        super(playerUUID, 100, 100, true, tile, completionTime);
+    public Flag(UUID uuid, UUID playerUUID, Tile tile, long completionTime) {
+        super(playerUUID, 25, 25, true, tile, completionTime);
         setUUID(uuid);
     }
 
-    public Wall(Connection databaseConnection, UUID uuid, Player player, int health, Tile tile, long completionTime) {
-        super(databaseConnection, uuid, player.getUUID(), health, 100, true, tile, completionTime);
+    public Flag(Connection databaseConnection, UUID uuid, Player player, int health, Tile tile, long completionTime) {
+        super(databaseConnection, uuid, player.getUUID(), health, 25, true, tile, completionTime);
     }
 
     @Override
@@ -66,7 +66,7 @@ public class Wall extends Unit {
         statement.setBoolean(5, isSolid());
         statement.setInt(6, getTile().getX());
         statement.setInt(7, getTile().getY());
-        statement.setString(8, "wall");
+        statement.setString(8, "flag");
         statement.setLong(9, getCompletionTime());
         statement.executeUpdate();
         cacheUnit(this);
@@ -83,7 +83,7 @@ public class Wall extends Unit {
         statement.setBoolean(4, isSolid());
         statement.setInt(5, getTile().getX());
         statement.setInt(6, getTile().getY());
-        statement.setString(7, "wall");
+        statement.setString(7, "flag");
         statement.setLong(8, getCompletionTime());
         statement.setString(9, getUUID().toString());
         statement.executeUpdate();

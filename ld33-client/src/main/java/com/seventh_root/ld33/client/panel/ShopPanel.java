@@ -39,6 +39,7 @@ public class ShopPanel extends JPanel {
         this.client = client;
         shopItems = new ArrayList<>();
         shopItems.add(new ShopItem(client, "wall_hor", "wall", "Wall"));
+        shopItems.add(new ShopItem(client, "flag_1", "flag", "Flag"));
         addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent event) {
@@ -55,8 +56,8 @@ public class ShopPanel extends JPanel {
                 repaint();
             }
         });
-        setMinimumSize(new Dimension(256, 480));
-        setPreferredSize(new Dimension(256, 480));
+        setMinimumSize(new Dimension(256, 640));
+        setPreferredSize(new Dimension(256, 640));
     }
 
     @Override

@@ -19,6 +19,7 @@ package com.seventh_root.ld33.server.network;
 import com.seventh_root.ld33.common.network.packet.serverbound.*;
 import com.seventh_root.ld33.common.player.Player;
 import com.seventh_root.ld33.common.world.Dragon;
+import com.seventh_root.ld33.common.world.Flag;
 import com.seventh_root.ld33.common.world.Unit;
 import com.seventh_root.ld33.common.world.Wall;
 import com.seventh_root.ld33.server.LD33Server;
@@ -79,6 +80,9 @@ public class LD33ServerBoundPacketDecoder extends ByteToMessageDecoder {
                             break;
                         case "dragon":
                             spawningUnit = new Dragon(UUID.fromString(spawningUnitUUID), Player.getByUUID(null, UUID.fromString(spawningUnitPlayerUUID)), server.getWorld().getTileAt(spawningUnitX, spawningUnitY), spawningUnitCompletionTime);
+                            break;
+                        case "flag":
+                            spawningUnit = new Flag(UUID.fromString(spawningUnitUUID), Player.getByUUID(null, UUID.fromString(spawningUnitPlayerUUID)), server.getWorld().getTileAt(spawningUnitX, spawningUnitY), spawningUnitCompletionTime);
                             break;
                         default:
                             spawningUnit = null;

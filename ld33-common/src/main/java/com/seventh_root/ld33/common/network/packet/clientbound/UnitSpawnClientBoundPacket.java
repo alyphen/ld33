@@ -16,10 +16,7 @@
 
 package com.seventh_root.ld33.common.network.packet.clientbound;
 
-import com.seventh_root.ld33.common.world.Dragon;
-import com.seventh_root.ld33.common.world.Unit;
-import com.seventh_root.ld33.common.world.Wall;
-import com.seventh_root.ld33.common.world.World;
+import com.seventh_root.ld33.common.world.*;
 import io.netty.buffer.ByteBuf;
 
 import java.io.UnsupportedEncodingException;
@@ -45,6 +42,8 @@ public class UnitSpawnClientBoundPacket extends ClientBoundPacket {
             this.type = "wall";
         else if (unit instanceof Dragon)
             this.type = "dragon";
+        else if (unit instanceof Flag)
+            this.type = "flag";
     }
 
     @Override
@@ -58,6 +57,8 @@ public class UnitSpawnClientBoundPacket extends ClientBoundPacket {
                 return new Wall(UUID.fromString(unitUUID), UUID.fromString(playerUUID), world.getTileAt(x, y), completionTime);
             case "dragon":
                 return new Dragon(UUID.fromString(unitUUID), UUID.fromString(playerUUID), world.getTileAt(x, y), completionTime);
+            case "flag":
+                return new Flag(UUID.fromString(unitUUID), UUID.fromString(playerUUID), world.getTileAt(x, y), completionTime);
         }
         return null;
     }

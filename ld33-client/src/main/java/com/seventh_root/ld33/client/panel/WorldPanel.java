@@ -253,6 +253,18 @@ public class WorldPanel extends JPanel {
                                 offset = 64;
                             }
                             frontGraphics.drawImage(texture, (x * 64) + unit.getXOffset(), (y * 64) + unit.getYOffset() - offset, null);
+                        } else if (unit instanceof Flag) {
+                            BufferedImage texture = null;
+                            if (currentFlagFrame == 0)
+                                texture = client.getTextureManager().getTexture("flag_1");
+                            else if (currentFlagFrame == 1)
+                                texture = client.getTextureManager().getTexture("flag_2");
+                            else if (currentFlagFrame == 2)
+                                texture = client.getTextureManager().getTexture("flag_3");
+                            else if (currentFlagFrame == 3)
+                                texture = client.getTextureManager().getTexture("flag_4");
+                            if (texture != null)
+                                frontGraphics.drawImage(texture, (x * 64), (y * 64) - 64, null);
                         }
                     }
                 }
