@@ -18,6 +18,7 @@ package com.seventh_root.ld33.client.panel;
 
 import com.seventh_root.ld33.client.LD33Client;
 import com.seventh_root.ld33.client.ShopItem;
+import com.seventh_root.ld33.client.texture.TextureManager;
 import com.seventh_root.ld33.common.network.packet.serverbound.UnitMoveServerBoundPacket;
 import com.seventh_root.ld33.common.world.*;
 
@@ -127,11 +128,70 @@ public class WorldPanel extends JPanel {
                             }
                             frontGraphics.drawImage(texture, (x * 64) + unit.getXOffset(), (y * 64) + unit.getYOffset(), null);
                         } else if (unit instanceof Wall) {
+                            TextureManager textureManager = client.getTextureManager();
+                            BufferedImage texture = textureManager.getTexture("tower");
+                            int offset = 128;
+                            Tile upTile = unit.getTile().getAdjacent(0, -1);
+                            boolean up = upTile != null && upTile.getUnit() != null && upTile.getUnit() instanceof Wall && upTile.getUnit().isComplete();
+                            Tile downTile = unit.getTile().getAdjacent(0, 1);
+                            boolean down = downTile != null && downTile.getUnit() != null && downTile.getUnit() instanceof Wall && downTile.getUnit().isComplete();
+                            Tile leftTile = unit.getTile().getAdjacent(-1, 0);
+                            boolean left = leftTile != null && leftTile.getUnit() != null && leftTile.getUnit() instanceof Wall && leftTile.getUnit().isComplete();
+                            Tile rightTile = unit.getTile().getAdjacent(1, 0);
+                            boolean right = rightTile != null && rightTile.getUnit() != null && rightTile.getUnit() instanceof Wall && rightTile.getUnit().isComplete();
                             if (unit.isComplete()) {
-                                frontGraphics.drawImage(client.getTextureManager().getTexture("tower"), (x * 64) + unit.getXOffset(), (y * 64) + unit.getYOffset() - 128, null);
+                                if (up) {
+                                    if (down) {
+                                        if (left) {
+                                            if (right) {
+                                                texture = textureManager.getTexture("tower_wall_up_down_left_right");
+                                            } else {
+                                                texture = textureManager.getTexture("tower_wall_up_down_left");
+                                            }
+                                        } else if (right) {
+                                            texture = textureManager.getTexture("tower_wall_up_down_right");
+                                        } else {
+                                            texture = textureManager.getTexture("wall_ver");
+                                            offset = 64;
+                                        }
+                                    } else if (left) {
+                                        if (right) {
+                                            texture = textureManager.getTexture("tower_wall_up_left_right");
+                                        } else {
+                                            texture = textureManager.getTexture("tower_wall_up_left");
+                                        }
+                                    } else if (right) {
+                                        texture = textureManager.getTexture("tower_wall_up_right");
+                                    } else {
+                                        texture = textureManager.getTexture("tower_wall_up");
+                                    }
+                                } else if (down) {
+                                    if (left) {
+                                        if (right) {
+                                            texture = textureManager.getTexture("tower_wall_down_left_right");
+                                        } else {
+                                            texture = textureManager.getTexture("tower_wall_down_left");
+                                        }
+                                    } else if (right) {
+                                        texture = textureManager.getTexture("tower_wall_down_right");
+                                    } else {
+                                        texture = textureManager.getTexture("tower_wall_down");
+                                    }
+                                } else if (left) {
+                                    if (right) {
+                                        texture = textureManager.getTexture("wall_hor");
+                                        offset = 64;
+                                    } else {
+                                        texture = textureManager.getTexture("tower_wall_left");
+                                    }
+                                } else if (right) {
+                                    texture = textureManager.getTexture("tower_wall_right");
+                                }
                             } else {
-                                frontGraphics.drawImage(client.getTextureManager().getTexture("wall_in_progress"), (x * 64) + unit.getXOffset(), (y * 64) + unit.getYOffset() - 64, null);
+                                texture = textureManager.getTexture("wall_in_progress");
+                                offset = 64;
                             }
+                            frontGraphics.drawImage(texture, (x * 64) + unit.getXOffset(), (y * 64) + unit.getYOffset() - offset, null);
                         }
                     }
                 }
