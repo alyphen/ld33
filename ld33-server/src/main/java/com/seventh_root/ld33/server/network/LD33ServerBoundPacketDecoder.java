@@ -91,6 +91,10 @@ public class LD33ServerBoundPacketDecoder extends ByteToMessageDecoder {
                     int movingUnitTargetY = in.readInt();
                     out.add(new UnitMoveServerBoundPacket(Unit.getByUUID(server.getDatabaseConnection(), server.getWorld(), UUID.fromString(movingUnitUUID)), movingUnitTargetX, movingUnitTargetY));
                     break;
+                case 7:
+                    String chatMessage = readString(in);
+                    out.add(new ChatMessageServerBoundPacket(chatMessage));
+                    break;
             }
         }
     }

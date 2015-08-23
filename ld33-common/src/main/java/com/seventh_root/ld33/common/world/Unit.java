@@ -167,6 +167,7 @@ public abstract class Unit implements DatabaseEntity {
 
     public void setTarget(Tile target) {
         this.target = target;
+        this.path = null;
     }
 
     public void moveTo(Tile tile) {

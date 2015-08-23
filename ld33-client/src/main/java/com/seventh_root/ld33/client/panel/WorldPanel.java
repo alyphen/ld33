@@ -119,6 +119,8 @@ public class WorldPanel extends JPanel {
             }
         });
         setDoubleBuffered(true);
+        setMinimumSize(new Dimension(640, 480));
+        setPreferredSize(new Dimension(640, 480));
     }
 
     @Override

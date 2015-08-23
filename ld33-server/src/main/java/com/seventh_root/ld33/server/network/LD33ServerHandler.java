@@ -124,6 +124,9 @@ public class LD33ServerHandler extends ChannelHandlerAdapter {
                 unit.moveTo(server.getWorld().getTileAt(packet.getTargetX(), packet.getTargetY()));
                 channels.writeAndFlush(new UnitMoveClientBoundPacket(unit, unit.getTile().getX(), unit.getTile().getY(), packet.getTargetX(), packet.getTargetY()));
             }
+        } else if (msg instanceof ChatMessageServerBoundPacket) {
+            ChatMessageServerBoundPacket packet = (ChatMessageServerBoundPacket) msg;
+            channels.writeAndFlush(new ChatMessageClientBoundPacket(ctx.channel().attr(PLAYER).get().getName() + ": " + packet.getMessage()));
         }
     }
 

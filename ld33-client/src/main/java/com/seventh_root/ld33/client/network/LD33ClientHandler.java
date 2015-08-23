@@ -71,7 +71,7 @@ public class LD33ClientHandler extends ChannelHandlerAdapter {
             client.getLoginPanel().setStatusMessage(packet.getMessage());
             client.getLoginPanel().reEnableLoginButtons();
             if (packet.isSuccess()) {
-                client.showPanel("world");
+                client.showPanel("game");
             }
         } else if (msg instanceof UnitSpawnClientBoundPacket) {
             UnitSpawnClientBoundPacket packet = (UnitSpawnClientBoundPacket) msg;
@@ -92,6 +92,9 @@ public class LD33ClientHandler extends ChannelHandlerAdapter {
                 unit.setTile(client.getWorldPanel().getWorld().getTileAt(packet.getX(), packet.getY()));
                 unit.moveTo(client.getWorldPanel().getWorld().getTileAt(packet.getTargetX(), packet.getTargetY()));
             }
+        } else if (msg instanceof ChatMessageClientBoundPacket) {
+            ChatMessageClientBoundPacket packet = (ChatMessageClientBoundPacket) msg;
+            client.getChatPanel().append(packet.getMessage());
         }
     }
 

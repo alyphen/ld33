@@ -19,9 +19,7 @@ package com.seventh_root.ld33.client;
 import com.seventh_root.ld33.client.network.LD33ClientBoundPacketDecoder;
 import com.seventh_root.ld33.client.network.LD33ClientHandler;
 import com.seventh_root.ld33.client.network.LD33ServerBoundPacketEncoder;
-import com.seventh_root.ld33.client.panel.ConnectionPanel;
-import com.seventh_root.ld33.client.panel.LoginPanel;
-import com.seventh_root.ld33.client.panel.WorldPanel;
+import com.seventh_root.ld33.client.panel.*;
 import com.seventh_root.ld33.common.encrypt.EncryptionManager;
 import com.seventh_root.ld33.common.network.packet.serverbound.ServerBoundPacket;
 import com.seventh_root.ld33.common.player.Player;
@@ -53,6 +51,8 @@ public class LD33Client extends JPanel {
     private ConnectionPanel connectionPanel;
     private LoginPanel loginPanel;
     private WorldPanel worldPanel;
+    private ChatPanel chatPanel;
+    private GamePanel gamePanel;
 
     private Channel channel;
 
@@ -76,7 +76,9 @@ public class LD33Client extends JPanel {
         loginPanel = new LoginPanel(this);
         add(loginPanel, "login");
         worldPanel = new WorldPanel(this);
-        add(worldPanel, "world");
+        chatPanel = new ChatPanel(this);
+        gamePanel = new GamePanel(this);
+        add(gamePanel, "game");
     }
 
     public boolean isRunning() {
@@ -154,6 +156,10 @@ public class LD33Client extends JPanel {
 
     public WorldPanel getWorldPanel() {
         return worldPanel;
+    }
+
+    public ChatPanel getChatPanel() {
+        return chatPanel;
     }
 
     public void showPanel(String panel) {
