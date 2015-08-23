@@ -218,7 +218,7 @@ public abstract class Unit implements DatabaseEntity {
     public void moveTo(Tile tile) {
         if (tile != null) {
             setTarget(tile);
-            if (tile.getUnit() != null) {
+            if (tile.getUnit() != null && !tile.getUnit().getPlayerUUID().toString().equals(getPlayerUUID().toString())) {
                 setAttackTarget(tile.getUnit());
             }
         }
