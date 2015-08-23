@@ -48,6 +48,7 @@ public class ShopItem {
 
     public void buy(Tile tile) {
         client.sendPacket(new UnitPurchaseServerBoundPacket(tile.getX(), tile.getY(), getName()));
+        client.getPlayer().setResources(client.getPlayer().getResources() - client.getEconomyManager().getResourceCost(getName()));
     }
 
 }
