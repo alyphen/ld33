@@ -132,15 +132,21 @@ public class LD33ServerHandler extends ChannelHandlerAdapter {
             UnitPurchaseServerBoundPacket packet = (UnitPurchaseServerBoundPacket) msg;
             Player player = ctx.channel().attr(PLAYER).get();
             int cost = server.getEconomyManager().getResourceCost(packet.getUnitType());
-            if (player.getResources() >= cost) {
-                player.setResources(player.getResources() - cost);
-                player.update();
-                Wall wall = new Wall(server.getDatabaseConnection(), player, server.getWorld().getTileAt(packet.getX(), packet.getY()), System.currentTimeMillis() + (server.getEconomyManager().getTimeCost(packet.getUnitType()) * 60000));
-                wall.getTile().setUnit(wall);
-                channels.writeAndFlush(new UnitSpawnClientBoundPacket(wall));
+            Tile tile = server.getWorld().getTileAt(packet.getX(), packet.getY());
+            if (tile.getUnit() == null) {
+                if (player.getResources() >= cost) {
+                    player.setResources(player.getResources() - cost);
+                    player.update();
+                    Wall wall = new Wall(server.getDatabaseConnection(), player, tile, System.currentTimeMillis() + (server.getEconomyManager().getTimeCost(packet.getUnitType()) * 60000));
+                    wall.getTile().setUnit(wall);
+                    channels.writeAndFlush(new UnitSpawnClientBoundPacket(wall));
+                } else {
+                    ctx.writeAndFlush(new ChatMessageClientBoundPacket("You do not have the resources to build that."));
+                }
             } else {
-                ctx.writeAndFlush(new ChatMessageClientBoundPacket("You do not have the resources to build that."));
+                ctx.writeAndFlush(new ChatMessageClientBoundPacket("You can't build there."));
             }
+
         }
     }
 
