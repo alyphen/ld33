@@ -34,6 +34,7 @@ import io.netty.util.concurrent.GlobalEventExecutor;
 
 import java.sql.SQLException;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 import static java.util.logging.Level.SEVERE;
 
@@ -97,10 +98,14 @@ public class LD33ServerHandler extends ChannelHandlerAdapter {
                 Player player = Player.getByName(server.getDatabaseConnection(), packet.getPlayerName());
                 if (player != null) {
                     if (player.checkPassword(server.getEncryptionManager().decrypt(packet.getEncryptedPassword()))) {
-                        ctx.channel().attr(PLAYER).set(player);
-                        ctx.writeAndFlush(new PlayerLoginResponseClientBoundPacket("Login successful. Entering the game world...", true));
-                        channels.writeAndFlush(new PlayerJoinClientBoundPacket(player.getUUID(), player.getName(), player.getResources()));
-                        sendUnits(ctx);
+                        if (channels.stream().filter(channel -> channel.attr(PLAYER).get() != null && channel.attr(PLAYER).get().getUUID().toString().equals(player.getUUID().toString())).collect(Collectors.toList()).size() == 0) {
+                            ctx.channel().attr(PLAYER).set(player);
+                            ctx.writeAndFlush(new PlayerLoginResponseClientBoundPacket("Login successful. Entering the game world...", true));
+                            channels.writeAndFlush(new PlayerJoinClientBoundPacket(player.getUUID(), player.getName(), player.getResources()));
+                            sendUnits(ctx);
+                        } else {
+                            ctx.writeAndFlush(new PlayerLoginResponseClientBoundPacket("Login unsuccessful: already logged in", false));
+                        }
                     } else {
                         ctx.writeAndFlush(new PlayerLoginResponseClientBoundPacket("Login unsuccessful: incorrect credentials", false));
                     }
