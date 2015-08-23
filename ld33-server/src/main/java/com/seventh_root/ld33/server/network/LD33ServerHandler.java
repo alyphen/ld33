@@ -66,7 +66,6 @@ public class LD33ServerHandler extends ChannelHandlerAdapter {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        System.out.println(msg.getClass().getName());
         if (msg instanceof PublicKeyServerBoundPacket) {
             PublicKeyServerBoundPacket packet = (PublicKeyServerBoundPacket) msg;
             ctx.channel().attr(PUBLIC_KEY).set(packet.getEncodedPublicKey());

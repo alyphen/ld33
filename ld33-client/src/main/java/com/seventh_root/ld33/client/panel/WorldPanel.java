@@ -32,6 +32,7 @@ import java.sql.SQLException;
 import java.util.Random;
 
 import static java.lang.Math.*;
+import static java.util.logging.Level.SEVERE;
 import static java.util.logging.Level.WARNING;
 import static javax.swing.SwingUtilities.*;
 
@@ -102,8 +103,23 @@ public class WorldPanel extends JPanel {
             @Override
             public void mouseMoved(MouseEvent event) {
                 Tile tile = getWorld().getTileAt((cameraX + event.getX()) / 64, (cameraY + event.getY()) / 64);
-                if (tile.getUnit() != null) {
-
+                if (tile != null) {
+                    if (tile.getUnit() != null) {
+                        Unit unit = tile.getUnit();
+                        try {
+                            setToolTipText("Owner: " + unit.getPlayer().getName() + " " +
+                                    "Health: " + unit.getHealth() + "/" + unit.getMaxHealth() + " " +
+                                    "Tile: " + unit.getTile().getX() + ", " + unit.getTile().getY() +
+                                    (unit.getTimeToComplete() > 0 ? " Seconds till completion: " + (unit.getTimeToComplete() / 1000) : "")
+                            );
+                        } catch (SQLException exception) {
+                            client.getLogger().log(SEVERE, "Failed to get player for unit", exception);
+                        }
+                    } else {
+                        setToolTipText(null);
+                    }
+                } else {
+                    setToolTipText(null);
                 }
             }
         });
