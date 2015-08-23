@@ -62,28 +62,34 @@ public class LD33ServerBoundPacketDecoder extends ByteToMessageDecoder {
                     break;
                 case 4:
                     String loginResponseMessage = readString(in);
-                    boolean success = in.readBoolean();
-                    out.add(new PlayerLoginResponseServerBoundPacket(loginResponseMessage, success));
+                    boolean loginSuccess = in.readBoolean();
+                    out.add(new PlayerLoginResponseServerBoundPacket(loginResponseMessage, loginSuccess));
                     break;
                 case 5:
-                    String unitUUID = readString(in);
-                    String playerUUID = readString(in);
-                    int x = in.readInt();
-                    int y = in.readInt();
-                    String type = readString(in);
-                    Unit unit;
-                    switch (type) {
+                    String spawningUnitUUID = readString(in);
+                    String spawningUnitPlayerUUID = readString(in);
+                    int spawningUnitX = in.readInt();
+                    int spawningUnitY = in.readInt();
+                    String spawningUnitType = readString(in);
+                    Unit spawningUnit;
+                    switch (spawningUnitType) {
                         case "wall":
-                            unit = new Wall(UUID.fromString(unitUUID), Player.getByUUID(null, UUID.fromString(playerUUID)), server.getWorld().getTileAt(x, y));
+                            spawningUnit = new Wall(UUID.fromString(spawningUnitUUID), Player.getByUUID(null, UUID.fromString(spawningUnitPlayerUUID)), server.getWorld().getTileAt(spawningUnitX, spawningUnitY));
                             break;
                         case "dragon":
-                            unit = new Dragon(UUID.fromString(unitUUID), Player.getByUUID(null, UUID.fromString(playerUUID)), server.getWorld().getTileAt(x, y));
+                            spawningUnit = new Dragon(UUID.fromString(spawningUnitUUID), Player.getByUUID(null, UUID.fromString(spawningUnitPlayerUUID)), server.getWorld().getTileAt(spawningUnitX, spawningUnitY));
                             break;
                         default:
-                            unit = null;
+                            spawningUnit = null;
                             break;
                     }
-                    out.add(new UnitSpawnServerBoundPacket(unit));
+                    out.add(new UnitSpawnServerBoundPacket(spawningUnit));
+                    break;
+                case 6:
+                    String movingUnitUUID = readString(in);
+                    int movingUnitTargetX = in.readInt();
+                    int movingUnitTargetY = in.readInt();
+                    out.add(new UnitMoveServerBoundPacket(Unit.getByUUID(server.getDatabaseConnection(), server.getWorld(), UUID.fromString(movingUnitUUID)), movingUnitTargetX, movingUnitTargetY));
                     break;
             }
         }

@@ -81,7 +81,16 @@ public class LD33ClientHandler extends ChannelHandlerAdapter {
                 Dragon dragon = (Dragon) unit;
                 if (dragon.getPlayer().getUUID().toString().equals(client.getPlayer().getUUID().toString())) {
                     client.getWorldPanel().setCameraFocus(dragon);
+                    client.getWorldPanel().setSelectedUnit(dragon);
                 }
+            }
+            Unit.cacheUnit(unit);
+        } else if (msg instanceof UnitMoveClientBoundPacket) {
+            UnitMoveClientBoundPacket packet = (UnitMoveClientBoundPacket) msg;
+            Unit unit = Unit.getByUUID(null, client.getWorldPanel().getWorld(), packet.getUnitUUID());
+            if (unit != null) {
+                unit.setTile(client.getWorldPanel().getWorld().getTileAt(packet.getX(), packet.getY()));
+                unit.moveTo(client.getWorldPanel().getWorld().getTileAt(packet.getTargetX(), packet.getTargetY()));
             }
         }
     }

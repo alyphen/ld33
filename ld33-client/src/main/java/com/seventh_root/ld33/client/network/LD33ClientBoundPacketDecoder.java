@@ -62,28 +62,36 @@ public class LD33ClientBoundPacketDecoder extends ByteToMessageDecoder {
                     break;
                 case 4:
                     String loginResponseMessage = readString(in);
-                    boolean success = in.readBoolean();
-                    out.add(new PlayerLoginResponseClientBoundPacket(loginResponseMessage, success));
+                    boolean loginSuccess = in.readBoolean();
+                    out.add(new PlayerLoginResponseClientBoundPacket(loginResponseMessage, loginSuccess));
                     break;
                 case 5:
-                    String unitUUID = readString(in);
-                    String playerUUID = readString(in);
-                    int x = in.readInt();
-                    int y = in.readInt();
+                    String spawningUnitUUID = readString(in);
+                    String spawningUnitPlayerUUID = readString(in);
+                    int spawningUnitX = in.readInt();
+                    int spawningUnitY = in.readInt();
                     String type = readString(in);
                     Unit unit;
                     switch (type) {
                         case "wall":
-                            unit = new Wall(UUID.fromString(unitUUID), Player.getByUUID(null, UUID.fromString(playerUUID)), client.getWorldPanel().getWorld().getTileAt(x, y));
+                            unit = new Wall(UUID.fromString(spawningUnitUUID), Player.getByUUID(null, UUID.fromString(spawningUnitPlayerUUID)), client.getWorldPanel().getWorld().getTileAt(spawningUnitX, spawningUnitY));
                             break;
                         case "dragon":
-                            unit = new Dragon(UUID.fromString(unitUUID), Player.getByUUID(null, UUID.fromString(playerUUID)), client.getWorldPanel().getWorld().getTileAt(x, y));
+                            unit = new Dragon(UUID.fromString(spawningUnitUUID), Player.getByUUID(null, UUID.fromString(spawningUnitPlayerUUID)), client.getWorldPanel().getWorld().getTileAt(spawningUnitX, spawningUnitY));
                             break;
                         default:
                             unit = null;
                             break;
                     }
                     out.add(new UnitSpawnClientBoundPacket(unit));
+                    break;
+                case 6:
+                    String movingUnitUUID = readString(in);
+                    int movingUnitX = in.readInt();
+                    int movingUnitY = in.readInt();
+                    int movingUnitTargetX = in.readInt();
+                    int movingUnitTargetY = in.readInt();
+                    out.add(new UnitMoveClientBoundPacket(Unit.getByUUID(null, client.getWorldPanel().getWorld(), UUID.fromString(movingUnitUUID)), movingUnitX, movingUnitY, movingUnitTargetX, movingUnitTargetY));
                     break;
             }
         }

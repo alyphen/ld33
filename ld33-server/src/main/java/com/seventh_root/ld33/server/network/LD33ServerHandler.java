@@ -17,9 +17,7 @@
 package com.seventh_root.ld33.server.network;
 
 import com.seventh_root.ld33.common.network.packet.clientbound.*;
-import com.seventh_root.ld33.common.network.packet.serverbound.PlayerLoginServerBoundPacket;
-import com.seventh_root.ld33.common.network.packet.serverbound.PlayerQuitServerBoundPacket;
-import com.seventh_root.ld33.common.network.packet.serverbound.PublicKeyServerBoundPacket;
+import com.seventh_root.ld33.common.network.packet.serverbound.*;
 import com.seventh_root.ld33.common.player.Player;
 import com.seventh_root.ld33.common.world.Dragon;
 import com.seventh_root.ld33.common.world.Tile;
@@ -115,6 +113,17 @@ public class LD33ServerHandler extends ChannelHandlerAdapter {
             Player player = ctx.channel().attr(PLAYER).get();
             channels.stream().filter(channel -> channel != ctx.channel()).forEach(channel -> channel.writeAndFlush(new PlayerQuitClientBoundPacket(player.getUUID(), player.getName())));
             ctx.close();
+        } else if (msg instanceof UnitSpawnServerBoundPacket) {
+            UnitSpawnServerBoundPacket packet = (UnitSpawnServerBoundPacket) msg;
+            Unit unit = packet.getUnit(server.getWorld());
+            unit.getTile().setUnit(unit);
+        } else if (msg instanceof UnitMoveServerBoundPacket) {
+            UnitMoveServerBoundPacket packet = (UnitMoveServerBoundPacket) msg;
+            Unit unit = Unit.getByUUID(server.getDatabaseConnection(), server.getWorld(), packet.getUnitUUID());
+            if (unit != null) {
+                unit.moveTo(server.getWorld().getTileAt(packet.getTargetX(), packet.getTargetY()));
+                channels.writeAndFlush(new UnitMoveClientBoundPacket(unit, unit.getTile().getX(), unit.getTile().getY(), packet.getTargetX(), packet.getTargetY()));
+            }
         }
     }
 

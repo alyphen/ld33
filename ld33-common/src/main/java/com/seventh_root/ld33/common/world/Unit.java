@@ -23,13 +23,25 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 import static java.lang.Math.abs;
 
 public abstract class Unit implements DatabaseEntity {
+
+    private static Map<String, Unit> unitsByUUID;
+
+    static {
+        unitsByUUID = new HashMap<>();
+    }
+
+    public static void cacheUnit(Unit unit) {
+        unitsByUUID.put(unit.getUUID().toString(), unit);
+    }
+
+    public static void uncacheUnit(Unit unit) {
+        unitsByUUID.remove(unit.getUUID().toString());
+    }
 
     private Connection databaseConnection;
 
@@ -44,6 +56,7 @@ public abstract class Unit implements DatabaseEntity {
     private int xOffset;
     private int yOffset;
     private Tile target;
+    private List<Tile> path;
 
     public Unit(Connection databaseConnection, Player player, int health, int maxHealth, boolean solid, Tile tile) {
         this.databaseConnection = databaseConnection;
@@ -165,33 +178,45 @@ public abstract class Unit implements DatabaseEntity {
     public void onTick() {
         if (getTarget() != null) {
             if (getTarget() != getTile()) {
-                List<Tile> path = getTile().getWorld().findPath(getTile(), getTarget());
+                if (path == null) path = getTile().getWorld().findPath(getTile(), getTarget());
                 if (path != null) {
                     Tile nextTile = path.get(0);
-                    if (abs(getXOffset()) == 64 || abs(getYOffset()) == 64) {
-                        setTile(nextTile);
-                        setXOffset(0);
-                        setYOffset(0);
-                    } else {
-                        if (nextTile.getX() > getTile().getX()) {
-                            setDX(getSpeed());
-                        } else if (nextTile.getX() < getTile().getX()) {
-                            setDX(-getSpeed());
+                    while (nextTile == getTile()) {
+                        path.remove(0);
+                        if (!path.isEmpty()) {
+                            nextTile = path.get(0);
                         } else {
-                            setDX(0);
+                            nextTile = null;
+                            path = null;
+                            break;
                         }
-                        if (nextTile.getY() > getTile().getX()) {
-                            setDY(getSpeed());
-                        } else if (nextTile.getY() < getTile().getY()) {
-                            setDY(-getSpeed());
+                    }
+                    if (nextTile != null) {
+                        if (abs(getXOffset()) == 64 || abs(getYOffset()) == 64) {
+                            setTile(nextTile);
+                            setXOffset(0);
+                            setYOffset(0);
                         } else {
-                            setDY(0);
-                        }
-                        if (abs(getDX()) > 0) {
-                            setXOffset(getXOffset() + getDX());
-                        }
-                        if (abs(getDY()) > 0) {
-                            setYOffset(getYOffset() + getDY());
+                            if (nextTile.getX() > getTile().getX()) {
+                                setDX(getSpeed());
+                            } else if (nextTile.getX() < getTile().getX()) {
+                                setDX(-getSpeed());
+                            } else {
+                                setDX(0);
+                            }
+                            if (nextTile.getY() > getTile().getY()) {
+                                setDY(getSpeed());
+                            } else if (nextTile.getY() < getTile().getY()) {
+                                setDY(-getSpeed());
+                            } else {
+                                setDY(0);
+                            }
+                            if (abs(getDX()) > 0) {
+                                setXOffset(getXOffset() + getDX());
+                            }
+                            if (abs(getDY()) > 0) {
+                                setYOffset(getYOffset() + getDY());
+                            }
                         }
                     }
                 } else {
@@ -202,13 +227,18 @@ public abstract class Unit implements DatabaseEntity {
     }
 
     public static Unit getByUUID(Connection databaseConnection, World world, UUID uuid) throws SQLException {
-        PreparedStatement statement = databaseConnection.prepareStatement(
-                "SELECT uuid, player_uuid, health, max_health, solid, x, y, type FROM unit WHERE uuid = ? LIMIT 1"
-        );
-        statement.setString(1, uuid.toString());
-        ResultSet resultSet = statement.executeQuery();
-        if (resultSet.next()) {
-            return fromResultSet(databaseConnection, world, resultSet);
+        if (unitsByUUID.containsKey(uuid.toString())) return unitsByUUID.get(uuid.toString());
+        if (databaseConnection != null) {
+            PreparedStatement statement = databaseConnection.prepareStatement(
+                    "SELECT uuid, player_uuid, health, max_health, solid, x, y, type FROM unit WHERE uuid = ? LIMIT 1"
+            );
+            statement.setString(1, uuid.toString());
+            ResultSet resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                Unit unit = fromResultSet(databaseConnection, world, resultSet);
+                cacheUnit(unit);
+                return unit;
+            }
         }
         return null;
     }
@@ -221,7 +251,9 @@ public abstract class Unit implements DatabaseEntity {
         statement.setInt(2, y);
         ResultSet resultSet = statement.executeQuery();
         if (resultSet.next()) {
-            return fromResultSet(databaseConnection, world, resultSet);
+            Unit unit = fromResultSet(databaseConnection, world, resultSet);
+            cacheUnit(unit);
+            return unit;
         }
         return null;
     }
@@ -243,7 +275,9 @@ public abstract class Unit implements DatabaseEntity {
         ResultSet resultSet = statement.executeQuery();
         List<Unit> units = new ArrayList<>();
         while (resultSet.next()) {
-            units.add(fromResultSet(databaseConnection, world, resultSet));
+            Unit unit = fromResultSet(databaseConnection, world, resultSet);
+            cacheUnit(unit);
+            units.add(unit);
         }
         return units;
     }

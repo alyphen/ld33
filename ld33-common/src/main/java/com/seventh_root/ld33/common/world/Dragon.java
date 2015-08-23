@@ -57,6 +57,7 @@ public class Dragon extends Unit {
         statement.setInt(7, getTile().getY());
         statement.setString(8, "dragon");
         statement.executeUpdate();
+        cacheUnit(this);
     }
 
     @Override
@@ -82,6 +83,7 @@ public class Dragon extends Unit {
         );
         statement.setString(1, getUUID().toString());
         statement.executeUpdate();
+        uncacheUnit(this);
     }
 
 }
