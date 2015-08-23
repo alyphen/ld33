@@ -135,7 +135,7 @@ public class LD33ServerHandler extends ChannelHandlerAdapter {
             if (player.getResources() >= cost) {
                 player.setResources(player.getResources() - cost);
                 player.update();
-                Wall wall = new Wall(server.getDatabaseConnection(), player, server.getWorld().getTileAt(packet.getX(), packet.getY()), System.currentTimeMillis() + server.getEconomyManager().getTimeCost(packet.getUnitType()));
+                Wall wall = new Wall(server.getDatabaseConnection(), player, server.getWorld().getTileAt(packet.getX(), packet.getY()), System.currentTimeMillis() + (server.getEconomyManager().getTimeCost(packet.getUnitType()) * 60000));
                 channels.writeAndFlush(new UnitSpawnClientBoundPacket(wall));
             } else {
                 ctx.writeAndFlush(new ChatMessageClientBoundPacket("You do not have the resources to build that."));

@@ -71,6 +71,7 @@ public abstract class Unit implements DatabaseEntity {
         this.dy = 0;
         this.xOffset = 0;
         this.yOffset = 0;
+        this.completionTime = completionTime;
     }
 
     public Unit(Player player, int health, int maxHealth, boolean solid, Tile tile, long completionTime) {
