@@ -42,6 +42,7 @@ public class ConnectionPanel extends JPanel {
         addressField.setMaximumSize(new Dimension(256, 24));
         addressField.setAlignmentX(CENTER_ALIGNMENT);
         addressField.addActionListener(event -> btnConnect.doClick());
+        addressField.setText("seventh-root.com");
         add(addressField);
         lblAddress.setLabelFor(addressField);
         add(Box.createVerticalStrut(16));
