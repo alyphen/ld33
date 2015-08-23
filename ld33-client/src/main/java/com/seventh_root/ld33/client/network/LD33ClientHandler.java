@@ -18,6 +18,7 @@ package com.seventh_root.ld33.client.network;
 
 import com.seventh_root.ld33.client.LD33Client;
 import com.seventh_root.ld33.common.network.packet.clientbound.*;
+import com.seventh_root.ld33.common.network.packet.serverbound.PlayerInformationServerBoundPacket;
 import com.seventh_root.ld33.common.network.packet.serverbound.PublicKeyServerBoundPacket;
 import com.seventh_root.ld33.common.player.Player;
 import com.seventh_root.ld33.common.world.Dragon;
@@ -81,9 +82,13 @@ public class LD33ClientHandler extends ChannelHandlerAdapter {
             unit.getTile().setUnit(unit);
             if (unit instanceof Dragon) {
                 Dragon dragon = (Dragon) unit;
-                if (dragon.getPlayer().getUUID().toString().equals(client.getPlayer().getUUID().toString())) {
-                    client.getWorldPanel().setCameraFocus(dragon);
-                    client.getWorldPanel().setSelectedUnit(dragon);
+                if (dragon.getPlayer() != null) {
+                    if (dragon.getPlayer().getUUID().toString().equals(client.getPlayer().getUUID().toString())) {
+                        client.getWorldPanel().setCameraFocus(dragon);
+                        client.getWorldPanel().setSelectedUnit(dragon);
+                    }
+                } else {
+                    ctx.writeAndFlush(new PlayerInformationServerBoundPacket(dragon.getPlayerUUID()));
                 }
             }
             Unit.cacheUnit(unit);
@@ -97,6 +102,9 @@ public class LD33ClientHandler extends ChannelHandlerAdapter {
         } else if (msg instanceof ChatMessageClientBoundPacket) {
             ChatMessageClientBoundPacket packet = (ChatMessageClientBoundPacket) msg;
             client.getChatPanel().append(packet.getMessage());
+        } else if (msg instanceof PlayerInformationClientBoundPacket) {
+            PlayerInformationClientBoundPacket packet = (PlayerInformationClientBoundPacket) msg;
+            Player.cachePlayer(new Player(packet.getPlayerUUID(), packet.getPlayerName(), packet.getPlayerResources()));
         }
     }
 

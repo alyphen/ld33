@@ -59,10 +59,20 @@ public abstract class Unit implements DatabaseEntity {
     private Tile target;
     private List<Tile> path;
     private long completionTime;
+    private Unit attackTarget;
 
     public Unit(Connection databaseConnection, Player player, int health, int maxHealth, boolean solid, Tile tile, long completionTime) {
+        this(databaseConnection, player.getUUID(), health, maxHealth, solid, tile, completionTime);
+    }
+
+    public Unit(Player player, int health, int maxHealth, boolean solid, Tile tile, long completionTime) {
+        this(null, player, health, maxHealth, solid, tile, completionTime);
+    }
+
+    public Unit(Connection databaseConnection, UUID uuid, UUID playerUUID, int health, int maxHealth, boolean solid, Tile tile, long completionTime) {
         this.databaseConnection = databaseConnection;
-        this.playerUUID = player.getUUID();
+        this.uuid = uuid;
+        this.playerUUID = playerUUID;
         this.health = health;
         this.maxHealth = maxHealth;
         this.solid = solid;
@@ -74,8 +84,12 @@ public abstract class Unit implements DatabaseEntity {
         this.completionTime = completionTime;
     }
 
-    public Unit(Player player, int health, int maxHealth, boolean solid, Tile tile, long completionTime) {
-        this(null, player, health, maxHealth, solid, tile, completionTime);
+    public Unit(Connection databaseConnection, UUID playerUUID, int health, int maxHealth, boolean solid, Tile tile, long completionTime) {
+        this(databaseConnection, null, playerUUID, health, maxHealth, solid, tile, completionTime);
+    }
+
+    public Unit(UUID playerUUID, int health, int maxHealth, boolean solid, Tile tile, long completionTime) {
+        this(null, playerUUID, health, maxHealth, solid, tile, completionTime);
     }
 
     public Connection getDatabaseConnection() {
@@ -96,6 +110,14 @@ public abstract class Unit implements DatabaseEntity {
 
     public void setPlayer(Player player) {
         this.playerUUID = player.getUUID();
+    }
+
+    public UUID getPlayerUUID() {
+        return playerUUID;
+    }
+
+    public void setPlayerUUID(UUID playerUUID) {
+        this.playerUUID = playerUUID;
     }
 
     public int getHealth() {
@@ -185,8 +207,21 @@ public abstract class Unit implements DatabaseEntity {
         return getTimeToComplete() == 0;
     }
 
+    public Unit getAttackTarget() {
+        return attackTarget;
+    }
+
+    public void setAttackTarget(Unit attackTarget) {
+        this.attackTarget = attackTarget;
+    }
+
     public void moveTo(Tile tile) {
-        setTarget(tile);
+        if (tile != null) {
+            setTarget(tile);
+            if (tile.getUnit() != null) {
+                setAttackTarget(tile.getUnit());
+            }
+        }
     }
 
     public abstract int getSpeed();
@@ -196,15 +231,23 @@ public abstract class Unit implements DatabaseEntity {
             if (getTarget() != getTile()) {
                 if (path == null) path = getTile().getWorld().findPath(getTile(), getTarget());
                 if (path != null) {
-                    Tile nextTile = path.get(0);
-                    while (nextTile == getTile()) {
-                        path.remove(0);
-                        if (!path.isEmpty()) {
-                            nextTile = path.get(0);
-                        } else {
-                            nextTile = null;
-                            path = null;
-                            break;
+                    Tile nextTile;
+                    if (!path.isEmpty()) {
+                        nextTile = path.get(0);
+                    } else {
+                        nextTile = null;
+                        path = null;
+                    }
+                    if (path != null) {
+                        while (nextTile == getTile()) {
+                            path.remove(0);
+                            if (!path.isEmpty()) {
+                                nextTile = path.get(0);
+                            } else {
+                                nextTile = null;
+                                path = null;
+                                break;
+                            }
                         }
                     }
                     if (nextTile != null) {
@@ -241,6 +284,20 @@ public abstract class Unit implements DatabaseEntity {
                 } else {
                     setTarget(null);
                 }
+            }
+        }
+        if (getAttackTarget() != null) {
+            if (getAttackTarget().getHealth() > 0) {
+                if (abs(getAttackTarget().getTile().getX() - getTile().getX()) == 1 || abs(getAttackTarget().getTile().getY() - getTile().getY()) == 1) {
+                    getAttackTarget().setHealth(getAttackTarget().getHealth() - 1);
+                    if (getAttackTarget().getDatabaseConnection() != null) getAttackTarget().update();
+                }
+            } else {
+                getAttackTarget().getTile().setUnit(null);
+                if (getDatabaseConnection() != null) getAttackTarget().delete();
+                setAttackTarget(null);
+                getPlayer().setResources(getPlayer().getResources() + 15);
+                if (getPlayer().getDatabaseConnection() != null) getPlayer().update();
             }
         }
     }
@@ -280,9 +337,9 @@ public abstract class Unit implements DatabaseEntity {
     public static Unit fromResultSet(Connection databaseConnection, World world, ResultSet resultSet) throws SQLException {
         switch (resultSet.getString("type")) {
             case "wall":
-                return new Wall(UUID.fromString(resultSet.getString("uuid")), Player.getByUUID(databaseConnection, UUID.fromString(resultSet.getString("player_uuid"))), world.getTileAt(resultSet.getInt("x"), resultSet.getInt("y")), resultSet.getLong("completion_time"));
+                return new Wall(databaseConnection, UUID.fromString(resultSet.getString("uuid")), Player.getByUUID(databaseConnection, UUID.fromString(resultSet.getString("player_uuid"))), resultSet.getInt("health"), world.getTileAt(resultSet.getInt("x"), resultSet.getInt("y")), resultSet.getLong("completion_time"));
             case "dragon":
-                return new Dragon(UUID.fromString(resultSet.getString("uuid")), Player.getByUUID(databaseConnection, UUID.fromString(resultSet.getString("player_uuid"))), world.getTileAt(resultSet.getInt("x"), resultSet.getInt("y")), resultSet.getLong("completion_time"));
+                return new Dragon(databaseConnection, UUID.fromString(resultSet.getString("uuid")), Player.getByUUID(databaseConnection, UUID.fromString(resultSet.getString("player_uuid"))), resultSet.getInt("health"), world.getTileAt(resultSet.getInt("x"), resultSet.getInt("y")), resultSet.getLong("completion_time"));
         }
         return null;
     }

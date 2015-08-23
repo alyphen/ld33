@@ -197,18 +197,31 @@ public class WorldPanel extends JPanel {
                 }
             }
         }
-        if (client.getShopPanel().getSelectedItem() == null) {
-            backGraphics.setColor(new Color(1F, 0F, 0F, 0.5F));
-        } else {
-            backGraphics.setColor(new Color(0F, 0F, 1F, 0.5F));
+        int mouseTileX = ((cameraX - (int) getLocationOnScreen().getX() + (int) MouseInfo.getPointerInfo().getLocation().getX()) / 64);
+        int mouseTileY = ((cameraY - (int) getLocationOnScreen().getY() + (int) MouseInfo.getPointerInfo().getLocation().getY()) / 64);
+        Tile mouseTile = getWorld().getTileAt(mouseTileX, mouseTileY);
+        if (mouseTile != null) {
+            if (mouseTile.getUnit() == null) {
+                if (client.getShopPanel().getSelectedItem() == null) {
+                    backGraphics.setColor(new Color(0F, 1F, 0F, 0.5F));
+                } else {
+                    backGraphics.setColor(new Color(0F, 0F, 1F, 0.5F));
+                }
+            } else {
+                backGraphics.setColor(new Color(1F, 0F, 0F, 0.5F));
+            }
+            backGraphics.fillRect(mouseTileX * 64, mouseTileY * 64, 64, 64);
+            if (mouseTile.getUnit() == null) {
+                if (client.getShopPanel().getSelectedItem() == null) {
+                    backGraphics.setColor(Color.GREEN);
+                } else {
+                    backGraphics.setColor(Color.BLUE);
+                }
+            } else {
+                backGraphics.setColor(Color.RED);
+            }
+            backGraphics.drawRect(((cameraX - (int) getLocationOnScreen().getX() + (int) MouseInfo.getPointerInfo().getLocation().getX()) / 64) * 64, ((cameraY - (int) getLocationOnScreen().getY() + (int) MouseInfo.getPointerInfo().getLocation().getY()) / 64) * 64, 64, 64);
         }
-        backGraphics.fillRect(((cameraX - (int) getLocationOnScreen().getX() + (int) MouseInfo.getPointerInfo().getLocation().getX()) / 64) * 64, ((cameraY - (int) getLocationOnScreen().getY() + (int) MouseInfo.getPointerInfo().getLocation().getY()) / 64) * 64, 64, 64);
-        if (client.getShopPanel().getSelectedItem() == null) {
-            backGraphics.setColor(Color.RED);
-        } else {
-            backGraphics.setColor(Color.BLUE);
-        }
-        backGraphics.drawRect(((cameraX - (int) getLocationOnScreen().getX() + (int) MouseInfo.getPointerInfo().getLocation().getX()) / 64) * 64, ((cameraY - (int) getLocationOnScreen().getY() + (int) MouseInfo.getPointerInfo().getLocation().getY()) / 64) * 64, 64, 64);
         graphics2D.translate(cameraX, cameraY);
         backGraphics.translate(cameraX, cameraY);
         frontGraphics.translate(cameraX, cameraY);

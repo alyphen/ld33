@@ -70,8 +70,14 @@ public class World {
                 map.setWalkable(x, y, unit == null || !unit.isSolid());
             }
         }
+        boolean removeEndTile = false;
+        if (!map.isWalkable(end.getX(), end.getY())) {
+            map.setWalkable(end.getX(), end.getY(), true);
+            removeEndTile = true;
+        }
         List<NodeImpl> path = map.findPath(start.getX(), start.getY(), end.getX(), end.getY());
         if (path != null) {
+            if (removeEndTile) path.remove(path.size() - 1);
             List<Tile> tiles = new ArrayList<>();
             path.forEach(node -> tiles.add(getTileAt(node.getX(), node.getY())));
             return tiles;

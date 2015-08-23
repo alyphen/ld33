@@ -16,7 +16,6 @@
 
 package com.seventh_root.ld33.common.network.packet.clientbound;
 
-import com.seventh_root.ld33.common.player.Player;
 import com.seventh_root.ld33.common.world.Dragon;
 import com.seventh_root.ld33.common.world.Unit;
 import com.seventh_root.ld33.common.world.Wall;
@@ -56,9 +55,9 @@ public class UnitSpawnClientBoundPacket extends ClientBoundPacket {
     public Unit getUnit(World world) throws SQLException {
         switch (type) {
             case "wall":
-                return new Wall(UUID.fromString(unitUUID), Player.getByUUID(null, UUID.fromString(playerUUID)), world.getTileAt(x, y), completionTime);
+                return new Wall(UUID.fromString(unitUUID), UUID.fromString(playerUUID), world.getTileAt(x, y), completionTime);
             case "dragon":
-                return new Dragon(UUID.fromString(unitUUID), Player.getByUUID(null, UUID.fromString(playerUUID)), world.getTileAt(x, y), completionTime);
+                return new Dragon(UUID.fromString(unitUUID), UUID.fromString(playerUUID), world.getTileAt(x, y), completionTime);
         }
         return null;
     }

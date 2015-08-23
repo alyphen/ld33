@@ -31,10 +31,26 @@ public class Dragon extends Unit {
     }
 
     public Dragon(UUID uuid, Player player, Tile tile, long completionTime) {
-        super(player, 100, 100, true, tile, completionTime);
+        super(player, 50, 50, true, tile, completionTime);
         setUUID(uuid);
-        setPlayer(player);
-        setTile(tile);
+    }
+
+    public Dragon(Connection databaseConnection, UUID playerUUID, Tile tile, long completionTime) throws SQLException {
+        super(databaseConnection, playerUUID, 50, 50, true, tile, completionTime);
+        insert();
+    }
+
+    public Dragon(Connection databaseConnection, UUID uuid, UUID playerUUID, Tile tile, long completionTime) {
+        super(databaseConnection, uuid, playerUUID, 50, 50, true, tile, completionTime);
+    }
+
+    public Dragon(UUID uuid, UUID playerUUID, Tile tile, long completionTime) {
+        super(playerUUID, 50, 50, true, tile, completionTime);
+        setUUID(uuid);
+    }
+
+    public Dragon(Connection databaseConnection, UUID uuid, Player player, int health, Tile tile, long completionTime) {
+        super(databaseConnection, uuid, player.getUUID(), health, 50, true, tile, completionTime);
     }
 
     @Override

@@ -151,7 +151,9 @@ public class LD33ServerHandler extends ChannelHandlerAdapter {
             } else {
                 ctx.writeAndFlush(new ChatMessageClientBoundPacket("You can't build there."));
             }
-
+        } else if (msg instanceof PlayerInformationServerBoundPacket) {
+            PlayerInformationServerBoundPacket packet = (PlayerInformationServerBoundPacket) msg;
+            ctx.writeAndFlush(new PlayerInformationClientBoundPacket(Player.getByUUID(server.getDatabaseConnection(), packet.getPlayerUUID())));
         }
     }
 

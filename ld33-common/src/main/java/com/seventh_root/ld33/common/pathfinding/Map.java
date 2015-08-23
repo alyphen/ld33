@@ -93,6 +93,10 @@ public class Map<T extends AbstractNode> {
         }
     }
 
+    public boolean isWalkable(int x, int y) {
+        return nodes[x][y].isWalkable();
+    }
+
     /**
      * sets nodes walkable field at given coordinates to given value.
      * <p>
