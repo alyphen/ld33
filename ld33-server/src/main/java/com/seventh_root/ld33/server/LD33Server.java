@@ -17,6 +17,8 @@
 package com.seventh_root.ld33.server;
 
 import com.seventh_root.ld33.common.encrypt.EncryptionManager;
+import com.seventh_root.ld33.common.world.Unit;
+import com.seventh_root.ld33.common.world.World;
 import com.seventh_root.ld33.server.config.Config;
 import com.seventh_root.ld33.server.network.LD33ClientBoundPacketEncoder;
 import com.seventh_root.ld33.server.network.LD33ServerBoundPacketDecoder;
@@ -35,6 +37,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
@@ -48,6 +51,7 @@ public class LD33Server {
     private Connection databaseConnection;
     private Logger logger;
     private EncryptionManager encryptionManager;
+    private World world;
     private boolean running;
     private static final long DELAY = 25L;
 
@@ -68,6 +72,8 @@ public class LD33Server {
             getLogger().log(SEVERE, "Failed to connect to database", exception);
         }
         encryptionManager = new EncryptionManager();
+        world = new World((int) ((double) getConfig().getMap("world").get("width")), (int) ((double) getConfig().getMap("world").get("height")));
+        loadUnits();
     }
 
     public Config getConfig() {
@@ -84,6 +90,10 @@ public class LD33Server {
 
     public EncryptionManager getEncryptionManager() {
         return encryptionManager;
+    }
+
+    public World getWorld() {
+        return world;
     }
 
     public boolean isRunning() {
@@ -107,7 +117,7 @@ public class LD33Server {
                         public void initChannel(SocketChannel channel) throws Exception {
                             channel.pipeline().addLast(
                                     new LD33ClientBoundPacketEncoder(),
-                                    new LD33ServerBoundPacketDecoder(),
+                                    new LD33ServerBoundPacketDecoder(LD33Server.this),
                                     handler
                             );
                         }
@@ -139,7 +149,7 @@ public class LD33Server {
     }
 
     private void doTick() {
-
+        world.onTick();
     }
 
     public void loadConfig() {
@@ -166,12 +176,26 @@ public class LD33Server {
             databaseSettings.put("user", "ld33");
             databaseSettings.put("password", "secret");
             defaultConfig.set("database", databaseSettings);
+            Map<String, Object> worldSettings = new HashMap<>();
+            worldSettings.put("width", 2000);
+            worldSettings.put("height", 2000);
+            defaultConfig.set("world", worldSettings);
             defaultConfig.save(configFile);
         }
     }
 
     public void saveDefaultConfig() throws IOException {
         saveDefaultConfig(new File("./config.json"));
+    }
+
+    public void loadUnits() {
+        try {
+            List<Unit> units = Unit.getAllUnits(getDatabaseConnection(), getWorld());
+            units.forEach(unit -> unit.getTile().setUnit(unit));
+        } catch (SQLException exception) {
+            getLogger().log(SEVERE, "Failed to load units", exception);
+        }
+
     }
 
 }

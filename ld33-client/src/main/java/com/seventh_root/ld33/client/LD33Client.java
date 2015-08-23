@@ -24,6 +24,7 @@ import com.seventh_root.ld33.client.panel.LoginPanel;
 import com.seventh_root.ld33.client.panel.WorldPanel;
 import com.seventh_root.ld33.common.encrypt.EncryptionManager;
 import com.seventh_root.ld33.common.network.packet.serverbound.ServerBoundPacket;
+import com.seventh_root.ld33.common.player.Player;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
@@ -60,6 +61,7 @@ public class LD33Client extends JPanel {
     private byte[] serverPublicKey;
 
     private String playerName;
+    private Player player;
 
     public LD33Client(LD33ClientFrame frame) {
         this.frame = frame;
@@ -96,7 +98,7 @@ public class LD33Client extends JPanel {
                         public void initChannel(SocketChannel channel) throws Exception {
                             channel.pipeline().addLast(
                                     new LD33ServerBoundPacketEncoder(),
-                                    new LD33ClientBoundPacketDecoder(),
+                                    new LD33ClientBoundPacketDecoder(LD33Client.this),
                                     new LD33ClientHandler(LD33Client.this)
                             );
                         }
@@ -131,7 +133,7 @@ public class LD33Client extends JPanel {
     }
 
     private void doTick() {
-
+        getWorldPanel().onTick();
     }
 
     public Logger getLogger() {
@@ -173,4 +175,17 @@ public class LD33Client extends JPanel {
     public void setServerPublicKey(byte[] serverPublicKey) {
         this.serverPublicKey = serverPublicKey;
     }
+
+    public String getPlayerName() {
+        return playerName;
+    }
+
+    public Player getPlayer() {
+        return player;
+    }
+
+    public void setPlayer(Player player) {
+        this.player = player;
+    }
+
 }

@@ -19,18 +19,25 @@ package com.seventh_root.ld33.common.network.packet.clientbound;
 import io.netty.buffer.ByteBuf;
 
 import java.io.UnsupportedEncodingException;
+import java.util.UUID;
 
 public class PlayerJoinClientBoundPacket extends ClientBoundPacket {
 
+    private String playerUUID;
     private String playerName;
 
-    public PlayerJoinClientBoundPacket(String playerName) {
+    public PlayerJoinClientBoundPacket(UUID playerUUID, String playerName) {
+        this.playerUUID = playerUUID.toString();
         this.playerName = playerName;
     }
 
     @Override
     public int getId() {
         return 2;
+    }
+
+    public UUID getPlayerUUID() {
+        return UUID.fromString(playerUUID);
     }
 
     public String getPlayerName() {
@@ -40,6 +47,7 @@ public class PlayerJoinClientBoundPacket extends ClientBoundPacket {
     @Override
     public void write(ByteBuf buf) throws UnsupportedEncodingException {
         super.write(buf);
+        writeString(buf, getPlayerUUID().toString());
         writeString(buf, getPlayerName());
     }
 }

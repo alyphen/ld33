@@ -70,6 +70,7 @@ public class LoginPanel extends JPanel {
             btnLogin.setEnabled(false);
             btnSignUp.setEnabled(false);
             try {
+                client.setPlayerName(userNameField.getText());
                 client.sendPacket(
                         new PlayerLoginServerBoundPacket(
                                 userNameField.getText(),

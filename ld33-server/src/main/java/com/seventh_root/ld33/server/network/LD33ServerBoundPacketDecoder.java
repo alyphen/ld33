@@ -17,13 +17,25 @@
 package com.seventh_root.ld33.server.network;
 
 import com.seventh_root.ld33.common.network.packet.serverbound.*;
+import com.seventh_root.ld33.common.player.Player;
+import com.seventh_root.ld33.common.world.Dragon;
+import com.seventh_root.ld33.common.world.Unit;
+import com.seventh_root.ld33.common.world.Wall;
+import com.seventh_root.ld33.server.LD33Server;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
 
 import java.util.List;
+import java.util.UUID;
 
 public class LD33ServerBoundPacketDecoder extends ByteToMessageDecoder {
+
+    private LD33Server server;
+
+    public LD33ServerBoundPacketDecoder(LD33Server server) {
+        this.server = server;
+    }
 
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
@@ -52,6 +64,26 @@ public class LD33ServerBoundPacketDecoder extends ByteToMessageDecoder {
                     String loginResponseMessage = readString(in);
                     boolean success = in.readBoolean();
                     out.add(new PlayerLoginResponseServerBoundPacket(loginResponseMessage, success));
+                    break;
+                case 5:
+                    String unitUUID = readString(in);
+                    String playerUUID = readString(in);
+                    int x = in.readInt();
+                    int y = in.readInt();
+                    String type = readString(in);
+                    Unit unit;
+                    switch (type) {
+                        case "wall":
+                            unit = new Wall(UUID.fromString(unitUUID), Player.getByUUID(null, UUID.fromString(playerUUID)), server.getWorld().getTileAt(x, y));
+                            break;
+                        case "dragon":
+                            unit = new Dragon(UUID.fromString(unitUUID), Player.getByUUID(null, UUID.fromString(playerUUID)), server.getWorld().getTileAt(x, y));
+                            break;
+                        default:
+                            unit = null;
+                            break;
+                    }
+                    out.add(new UnitSpawnServerBoundPacket(unit));
                     break;
             }
         }

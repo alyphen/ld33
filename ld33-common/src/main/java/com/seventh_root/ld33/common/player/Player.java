@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.seventh_root.ld33.server.player;
+package com.seventh_root.ld33.common.player;
 
 import com.seventh_root.ld33.common.database.DatabaseEntity;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -24,11 +24,31 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.apache.commons.codec.digest.DigestUtils.sha256Hex;
 
 public class Player implements DatabaseEntity {
+
+    private static Map<String, Player> playersByUUID;
+    private static Map<String, Player> playersByName;
+
+    static {
+        playersByUUID = new HashMap<>();
+        playersByName = new HashMap<>();
+    }
+
+    public static void cachePlayer(Player player) {
+        playersByUUID.put(player.getUUID().toString(), player);
+        playersByName.put(player.getName(), player);
+    }
+
+    public static void uncachePlayer(Player player) {
+        playersByUUID.remove(player.getUUID().toString());
+        playersByName.remove(player.getName());
+    }
 
     private Connection databaseConnection;
 
@@ -50,6 +70,11 @@ public class Player implements DatabaseEntity {
         this.name = name;
         this.passwordHash = passwordHash;
         this.passwordSalt = passwordSalt;
+    }
+
+    public Player(UUID uuid, String name) {
+        this.uuid = uuid;
+        this.name = name;
     }
 
     public Connection getDatabaseConnection() {
@@ -100,6 +125,7 @@ public class Player implements DatabaseEntity {
         statement.setString(3, getPasswordHash());
         statement.setString(4, getPasswordSalt());
         statement.executeUpdate();
+        cachePlayer(this);
     }
 
     @Override
@@ -120,32 +146,39 @@ public class Player implements DatabaseEntity {
                 "DELETE FROM player WHERE uuid = ?"
         );
         statement.setString(1, getUUID().toString());
+        uncachePlayer(this);
     }
 
     public static Player getByUUID(Connection databaseConnection, UUID uuid) throws SQLException {
-        PreparedStatement statement = databaseConnection.prepareStatement(
-                "SELECT uuid, name, password_hash, password_salt FROM player WHERE uuid = ? LIMIT 1"
-        );
-        statement.setString(1, uuid.toString());
-        ResultSet resultSet = statement.executeQuery();
-        if (resultSet.next()) {
-            return new Player(databaseConnection, UUID.fromString(resultSet.getString("uuid")), resultSet.getString("name"), resultSet.getString("password_hash"), resultSet.getString("password_salt"));
-        } else {
-            return null;
+        if (playersByUUID.containsKey(uuid.toString())) return playersByUUID.get(uuid.toString());
+        if (databaseConnection != null) {
+            PreparedStatement statement = databaseConnection.prepareStatement(
+                    "SELECT uuid, name, password_hash, password_salt FROM player WHERE uuid = ? LIMIT 1"
+            );
+            statement.setString(1, uuid.toString());
+            ResultSet resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                Player player = new Player(databaseConnection, UUID.fromString(resultSet.getString("uuid")), resultSet.getString("name"), resultSet.getString("password_hash"), resultSet.getString("password_salt"));
+                cachePlayer(player);
+                return player;
+            }
         }
+        return null;
     }
 
     public static Player getByName(Connection databaseConnection, String playerName) throws SQLException {
-        PreparedStatement statement = databaseConnection.prepareStatement(
-                "SELECT uuid, name, password_hash, password_salt FROM player WHERE name = ? LIMIT 1"
-        );
-        statement.setString(1, playerName);
-        ResultSet resultSet = statement.executeQuery();
-        if (resultSet.next()) {
-            return new Player(databaseConnection, UUID.fromString(resultSet.getString("uuid")), resultSet.getString("name"), resultSet.getString("password_hash"), resultSet.getString("password_salt"));
-        } else {
-            return null;
+        if (playersByName.containsKey(playerName)) return playersByName.get(playerName);
+        if (databaseConnection != null) {
+            PreparedStatement statement = databaseConnection.prepareStatement(
+                    "SELECT uuid, name, password_hash, password_salt FROM player WHERE name = ? LIMIT 1"
+            );
+            statement.setString(1, playerName);
+            ResultSet resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return new Player(databaseConnection, UUID.fromString(resultSet.getString("uuid")), resultSet.getString("name"), resultSet.getString("password_hash"), resultSet.getString("password_salt"));
+            }
         }
+        return null;
     }
 
 }
