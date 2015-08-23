@@ -89,8 +89,18 @@ public class LD33ServerHandler extends ChannelHandlerAdapter {
                         startY = random.nextInt(server.getWorld().getHeight());
                         startTile = server.getWorld().getTileAt(startX, startY);
                     }
-                    startTile.setUnit(new Dragon(server.getDatabaseConnection(), player, startTile, System.currentTimeMillis()));
+                    Dragon dragon = new Dragon(server.getDatabaseConnection(), player, startTile, System.currentTimeMillis());
+                    startTile.setUnit(dragon);
+                    sendWorldInfo(ctx);
                     sendUnits(ctx);
+                    channels.stream().filter(channel -> channel != ctx.channel()).forEach(channel -> {
+                        try {
+                            channel.writeAndFlush(new UnitSpawnClientBoundPacket(dragon));
+                        } catch (SQLException exception) {
+                            server.getLogger().log(SEVERE, "Failed to send unit spawn packet", exception);
+                        }
+                    });
+                    channels.writeAndFlush(new ChatMessageClientBoundPacket(player.getName() + " joined the game for the first time!"));
                 } else {
                     ctx.writeAndFlush(new PlayerLoginResponseClientBoundPacket("Sign up unsuccessful: that username is already in use", false));
                 }
@@ -102,7 +112,9 @@ public class LD33ServerHandler extends ChannelHandlerAdapter {
                             ctx.channel().attr(PLAYER).set(player);
                             ctx.writeAndFlush(new PlayerLoginResponseClientBoundPacket("Login successful. Entering the game world...", true));
                             channels.writeAndFlush(new PlayerJoinClientBoundPacket(player.getUUID(), player.getName(), player.getResources()));
+                            sendWorldInfo(ctx);
                             sendUnits(ctx);
+                            channels.writeAndFlush(new ChatMessageClientBoundPacket(player.getName() + " joined the game. Welcome back!"));
                         } else {
                             ctx.writeAndFlush(new PlayerLoginResponseClientBoundPacket("Login unsuccessful: already logged in", false));
                         }
@@ -119,6 +131,7 @@ public class LD33ServerHandler extends ChannelHandlerAdapter {
             Player player = ctx.channel().attr(PLAYER).get();
             channels.stream().filter(channel -> channel != ctx.channel()).forEach(channel -> channel.writeAndFlush(new PlayerQuitClientBoundPacket(player.getUUID(), player.getName())));
             ctx.close();
+            channels.writeAndFlush(new ChatMessageClientBoundPacket(ctx.channel().attr(PLAYER).get().getName() + " left the game"));
         } else if (msg instanceof UnitSpawnServerBoundPacket) {
             UnitSpawnServerBoundPacket packet = (UnitSpawnServerBoundPacket) msg;
             Unit unit = packet.getUnit(server.getWorld());
@@ -161,6 +174,10 @@ public class LD33ServerHandler extends ChannelHandlerAdapter {
             PlayerInformationServerBoundPacket packet = (PlayerInformationServerBoundPacket) msg;
             ctx.writeAndFlush(new PlayerInformationClientBoundPacket(Player.getByUUID(server.getDatabaseConnection(), packet.getPlayerUUID())));
         }
+    }
+
+    private void sendWorldInfo(ChannelHandlerContext ctx) {
+        ctx.writeAndFlush(new WorldInformationClientBoundPacket(server.getWorld().getWidth(), server.getWorld().getHeight()));
     }
 
     private void sendUnits(ChannelHandlerContext ctx) {

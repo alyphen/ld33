@@ -50,9 +50,9 @@ public class WorldPanel extends JPanel {
     private long millisSinceLastFlagFrameChange;
     private long lastTickTime;
 
-    public WorldPanel(LD33Client client) {
+    public WorldPanel(LD33Client client, int worldWidth, int worldHeight) {
         this.client = client;
-        world = new World(2000, 2000);
+        world = new World(worldWidth, worldHeight);
         cameraX = 0;
         cameraY = 0;
         addMouseListener(new MouseAdapter() {
@@ -64,6 +64,14 @@ public class WorldPanel extends JPanel {
                             (cameraX + event.getX()) / 64,
                             (cameraY + event.getY()) / 64
                     ));
+                    Tile tile = getWorld().getTileAt((cameraX + event.getX()) / 64, (cameraY + event.getY()) / 64);
+                    if (tile != null) {
+                        if (tile.getUnit() != null) {
+                            if (!tile.getUnit().getPlayerUUID().toString().equals(client.getPlayer().getUUID().toString())) {
+                                new Thread(() -> client.getSoundPlayer().play(getClass().getResourceAsStream("/burn.ogg"))).start();
+                            }
+                        }
+                    }
                 } else if (isLeftMouseButton(event)) {
                     ShopItem selectedShopItem = client.getShopPanel().getSelectedItem();
                     if (selectedShopItem != null) {
@@ -88,6 +96,14 @@ public class WorldPanel extends JPanel {
                     cameraX -= dx;
                     cameraY -= dy;
                     mousePoint = event.getPoint();
+                }
+            }
+
+            @Override
+            public void mouseMoved(MouseEvent event) {
+                Tile tile = getWorld().getTileAt((cameraX + event.getX()) / 64, (cameraY + event.getY()) / 64);
+                if (tile.getUnit() != null) {
+
                 }
             }
         });
@@ -133,7 +149,7 @@ public class WorldPanel extends JPanel {
                             }
                             frontGraphics.drawImage(texture, (x * 64) + unit.getXOffset(), (y * 64) + unit.getYOffset(), null);
                             particleGraphics.setColor(Color.BLACK);
-                            if (unit.getAttackTarget() != null && (abs(unit.getAttackTarget().getTile().getX() - unit.getTile().getX()) == 1 || abs(unit.getAttackTarget().getTile().getY() - unit.getTile().getY()) == 1)) {
+                            if (unit.getAttackTarget() != null && ((abs(unit.getAttackTarget().getTile().getX() - unit.getTile().getX()) == 1 && unit.getAttackTarget().getTile().getY() == unit.getTile().getY()) || (abs(unit.getAttackTarget().getTile().getY() - unit.getTile().getY()) == 1 && unit.getAttackTarget().getTile().getX() == unit.getTile().getX()))) {
                                 int xStart = min(unit.getTile().getX(), unit.getAttackTarget().getTile().getX());
                                 int xEnd = max(unit.getTile().getX(), unit.getAttackTarget().getTile().getX());
                                 int yStart = min(unit.getTile().getY(), unit.getAttackTarget().getTile().getY());

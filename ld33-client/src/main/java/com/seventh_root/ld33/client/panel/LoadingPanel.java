@@ -14,29 +14,18 @@
  * limitations under the License.
  */
 
-package com.seventh_root.ld33.common.economy;
+package com.seventh_root.ld33.client.panel;
 
-import java.util.HashMap;
-import java.util.Map;
+import javax.swing.*;
+import java.awt.*;
 
-public class EconomyManager {
+public class LoadingPanel extends JPanel {
 
-    private Map<String, Integer> resourceCosts;
-    private Map<String, Integer> timeCosts;
-
-    public EconomyManager() {
-        resourceCosts = new HashMap<>();
-        resourceCosts.put("wall", 10);
-        timeCosts = new HashMap<>();
-        timeCosts.put("wall", 2);
+    @Override
+    protected void paintComponent(Graphics graphics) {
+        graphics.setColor(Color.DARK_GRAY);
+        graphics.fillRect(0, 0, getWidth(), getHeight());
+        graphics.setColor(Color.WHITE);
+        graphics.drawString("Loading...", (getWidth() - graphics.getFontMetrics().stringWidth("Loading...")) / 2, (getHeight() / 2) - graphics.getFontMetrics().getMaxAscent());
     }
-
-    public int getResourceCost(String unitType) {
-        return resourceCosts.get(unitType);
-    }
-
-    public int getTimeCost(String unitType) {
-        return timeCosts.get(unitType);
-    }
-
 }

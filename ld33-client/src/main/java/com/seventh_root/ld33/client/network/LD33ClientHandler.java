@@ -105,6 +105,21 @@ public class LD33ClientHandler extends ChannelHandlerAdapter {
         } else if (msg instanceof PlayerInformationClientBoundPacket) {
             PlayerInformationClientBoundPacket packet = (PlayerInformationClientBoundPacket) msg;
             Player.cachePlayer(new Player(packet.getPlayerUUID(), packet.getPlayerName(), packet.getPlayerResources()));
+        } else if (msg instanceof WorldInformationClientBoundPacket) {
+            WorldInformationClientBoundPacket packet = (WorldInformationClientBoundPacket) msg;
+            client.addGamePanel(packet.getWidth(), packet.getHeight());
+            client.showPanel("game");
+        } else if (msg instanceof UnitDamageClientBoundPacket) {
+            UnitDamageClientBoundPacket packet = (UnitDamageClientBoundPacket) msg;
+            if (client.getWorldPanel() != null) {
+                Unit unit = Unit.getByUUID(null, client.getWorldPanel().getWorld(), packet.getUnitUUID());
+                if (unit != null) {
+                    unit.setHealth(packet.getUnitHealth());
+                    if (unit.getHealth() <= 0) {
+                        unit.getTile().setUnit(null);
+                    }
+                }
+            }
         }
     }
 

@@ -14,29 +14,31 @@
  * limitations under the License.
  */
 
-package com.seventh_root.ld33.common.economy;
+package com.seventh_root.ld33.common.network.packet.serverbound;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.UUID;
 
-public class EconomyManager {
+public class UnitDamageServerBoundPacket extends ServerBoundPacket {
 
-    private Map<String, Integer> resourceCosts;
-    private Map<String, Integer> timeCosts;
+    private String unitUUID;
+    private int unitHealth;
 
-    public EconomyManager() {
-        resourceCosts = new HashMap<>();
-        resourceCosts.put("wall", 10);
-        timeCosts = new HashMap<>();
-        timeCosts.put("wall", 2);
+    public UnitDamageServerBoundPacket(String unitUUID, int unitHealth) {
+        this.unitUUID = unitUUID;
+        this.unitHealth = unitHealth;
     }
 
-    public int getResourceCost(String unitType) {
-        return resourceCosts.get(unitType);
+    @Override
+    public int getId() {
+        return 11;
     }
 
-    public int getTimeCost(String unitType) {
-        return timeCosts.get(unitType);
+    public UUID getUnitUUID() {
+        return UUID.fromString(unitUUID);
+    }
+
+    public int getUnitHealth() {
+        return unitHealth;
     }
 
 }

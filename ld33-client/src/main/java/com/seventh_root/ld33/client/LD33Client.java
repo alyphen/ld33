@@ -88,11 +88,7 @@ public class LD33Client extends JPanel {
         add(connectionPanel, "connect");
         loginPanel = new LoginPanel(this);
         add(loginPanel, "login");
-        worldPanel = new WorldPanel(this);
-        chatPanel = new ChatPanel(this);
-        shopPanel = new ShopPanel(this);
-        gamePanel = new GamePanel(this);
-        add(gamePanel, "game");
+        add(new LoadingPanel(), "loading");
         new Thread(() -> getSoundPlayer().loop("/ld33.ogg")).start();
 
     }
@@ -153,8 +149,8 @@ public class LD33Client extends JPanel {
     }
 
     private void doTick() {
-        getWorldPanel().onTick();
-        getShopPanel().onTick();
+        if (getWorldPanel() != null) getWorldPanel().onTick();
+        if (getShopPanel() != null) getShopPanel().onTick();
     }
 
     public Logger getLogger() {
@@ -185,6 +181,10 @@ public class LD33Client extends JPanel {
         return worldPanel;
     }
 
+    public void setWorldPanel(WorldPanel worldPanel) {
+        this.worldPanel = worldPanel;
+    }
+
     public ChatPanel getChatPanel() {
         return chatPanel;
     }
@@ -195,6 +195,14 @@ public class LD33Client extends JPanel {
 
     public void showPanel(String panel) {
         ((CardLayout) getLayout()).show(this, panel);
+    }
+
+    public void addGamePanel(int worldWidth, int worldHeight) {
+        worldPanel = new WorldPanel(this, worldWidth, worldHeight);
+        chatPanel = new ChatPanel(this);
+        shopPanel = new ShopPanel(this);
+        gamePanel = new GamePanel(this);
+        add(gamePanel, "game");
     }
 
     public void sendPacket(ServerBoundPacket packet) {

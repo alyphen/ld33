@@ -288,7 +288,7 @@ public abstract class Unit implements DatabaseEntity {
         }
         if (getAttackTarget() != null) {
             if (getAttackTarget().getHealth() > 0) {
-                if (abs(getAttackTarget().getTile().getX() - getTile().getX()) == 1 || abs(getAttackTarget().getTile().getY() - getTile().getY()) == 1) {
+                if ((abs(getAttackTarget().getTile().getX() - getTile().getX()) == 1 && getAttackTarget().getTile().getY() == getTile().getY()) || (abs(getAttackTarget().getTile().getY() - getTile().getY()) == 1 && getAttackTarget().getTile().getX() == getTile().getX())) {
                     getAttackTarget().setHealth(getAttackTarget().getHealth() - 1);
                     if (getAttackTarget().getDatabaseConnection() != null) getAttackTarget().update();
                 }
