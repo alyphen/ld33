@@ -14,47 +14,47 @@
  * limitations under the License.
  */
 
-package com.seventh_root.ld33.common.network.packet.clientbound;
+package com.seventh_root.ld33.common.network.packet.serverbound;
 
 import io.netty.buffer.ByteBuf;
 
 import java.io.UnsupportedEncodingException;
-import java.util.UUID;
 
-public class PlayerJoinClientBoundPacket extends ClientBoundPacket {
+public class UnitPurchaseServerBoundPacket extends ServerBoundPacket {
 
-    private String playerUUID;
-    private String playerName;
-    private int playerResources;
+    private int x;
+    private int y;
+    private String unitType;
 
-    public PlayerJoinClientBoundPacket(UUID playerUUID, String playerName, int playerResources) {
-        this.playerUUID = playerUUID.toString();
-        this.playerName = playerName;
-        this.playerResources = playerResources;
+    public UnitPurchaseServerBoundPacket(int x, int y, String unitType) {
+        this.x = x;
+        this.y = y;
+        this.unitType = unitType;
     }
 
     @Override
     public int getId() {
-        return 2;
+        return 8;
     }
 
-    public UUID getPlayerUUID() {
-        return UUID.fromString(playerUUID);
+    public int getX() {
+        return x;
     }
 
-    public String getPlayerName() {
-        return playerName;
+    public int getY() {
+        return y;
     }
 
-    public int getPlayerResources() {
-        return playerResources;
+    public String getUnitType() {
+        return unitType;
     }
 
     @Override
     public void write(ByteBuf buf) throws UnsupportedEncodingException {
         super.write(buf);
-        writeString(buf, getPlayerUUID().toString());
-        writeString(buf, getPlayerName());
-        buf.writeInt(getPlayerResources());
+        buf.writeInt(getX());
+        buf.writeInt(getY());
+        writeString(buf, getUnitType());
     }
+
 }

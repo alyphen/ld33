@@ -25,6 +25,7 @@ import com.seventh_root.ld33.common.world.Unit;
 import io.netty.channel.ChannelHandlerAdapter;
 import io.netty.channel.ChannelHandlerContext;
 
+import static java.util.logging.Level.SEVERE;
 import static javax.swing.JOptionPane.showMessageDialog;
 
 public class LD33ClientHandler extends ChannelHandlerAdapter {
@@ -58,7 +59,7 @@ public class LD33ClientHandler extends ChannelHandlerAdapter {
             // Not sure whether I'll use this one
         } else if (msg instanceof PlayerJoinClientBoundPacket) {
             PlayerJoinClientBoundPacket packet = (PlayerJoinClientBoundPacket) msg;
-            Player player = new Player(packet.getPlayerUUID(), packet.getPlayerName());
+            Player player = new Player(packet.getPlayerUUID(), packet.getPlayerName(), packet.getPlayerResources());
             Player.cachePlayer(player);
             if (packet.getPlayerName().equals(client.getPlayerName())) {
                 client.setPlayer(player);
@@ -69,9 +70,10 @@ public class LD33ClientHandler extends ChannelHandlerAdapter {
         } else if (msg instanceof PlayerLoginResponseClientBoundPacket) {
             PlayerLoginResponseClientBoundPacket packet = (PlayerLoginResponseClientBoundPacket) msg;
             client.getLoginPanel().setStatusMessage(packet.getMessage());
-            client.getLoginPanel().reEnableLoginButtons();
             if (packet.isSuccess()) {
                 client.showPanel("game");
+            } else {
+                client.getLoginPanel().reEnableLoginButtons();
             }
         } else if (msg instanceof UnitSpawnClientBoundPacket) {
             UnitSpawnClientBoundPacket packet = (UnitSpawnClientBoundPacket) msg;
@@ -100,7 +102,7 @@ public class LD33ClientHandler extends ChannelHandlerAdapter {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-
+        client.getLogger().log(SEVERE, "A network exception occurred", cause);
     }
 
 }

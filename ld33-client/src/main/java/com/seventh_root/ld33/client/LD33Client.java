@@ -20,6 +20,8 @@ import com.seventh_root.ld33.client.network.LD33ClientBoundPacketDecoder;
 import com.seventh_root.ld33.client.network.LD33ClientHandler;
 import com.seventh_root.ld33.client.network.LD33ServerBoundPacketEncoder;
 import com.seventh_root.ld33.client.panel.*;
+import com.seventh_root.ld33.client.texture.TextureManager;
+import com.seventh_root.ld33.common.economy.EconomyManager;
 import com.seventh_root.ld33.common.encrypt.EncryptionManager;
 import com.seventh_root.ld33.common.network.packet.serverbound.ServerBoundPacket;
 import com.seventh_root.ld33.common.player.Player;
@@ -47,11 +49,14 @@ public class LD33Client extends JPanel {
     private Logger logger;
 
     private EncryptionManager encryptionManager;
+    private TextureManager textureManager;
+    private EconomyManager economyManager;
 
     private ConnectionPanel connectionPanel;
     private LoginPanel loginPanel;
     private WorldPanel worldPanel;
     private ChatPanel chatPanel;
+    private ShopPanel shopPanel;
     private GamePanel gamePanel;
 
     private Channel channel;
@@ -69,6 +74,8 @@ public class LD33Client extends JPanel {
         logger = Logger.getLogger(getClass().getCanonicalName());
 
         encryptionManager = new EncryptionManager();
+        textureManager = new TextureManager(this);
+        economyManager = new EconomyManager();
 
         setLayout(new CardLayout());
         connectionPanel = new ConnectionPanel(this);
@@ -77,6 +84,7 @@ public class LD33Client extends JPanel {
         add(loginPanel, "login");
         worldPanel = new WorldPanel(this);
         chatPanel = new ChatPanel(this);
+        shopPanel = new ShopPanel(this);
         gamePanel = new GamePanel(this);
         add(gamePanel, "game");
     }
@@ -109,7 +117,7 @@ public class LD33Client extends JPanel {
             start();
             channel.closeFuture().sync();
         } catch (InterruptedException exception) {
-            exception.printStackTrace();
+            getLogger().log(SEVERE, "Event loop group interrupted", exception);
         } finally {
             group.shutdownGracefully();
         }
@@ -146,6 +154,14 @@ public class LD33Client extends JPanel {
         return encryptionManager;
     }
 
+    public TextureManager getTextureManager() {
+        return textureManager;
+    }
+
+    public EconomyManager getEconomyManager() {
+        return economyManager;
+    }
+
     public ConnectionPanel getConnectionPanel() {
         return connectionPanel;
     }
@@ -160,6 +176,10 @@ public class LD33Client extends JPanel {
 
     public ChatPanel getChatPanel() {
         return chatPanel;
+    }
+
+    public ShopPanel getShopPanel() {
+        return shopPanel;
     }
 
     public void showPanel(String panel) {

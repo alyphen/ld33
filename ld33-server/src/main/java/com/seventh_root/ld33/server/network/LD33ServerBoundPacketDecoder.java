@@ -71,13 +71,14 @@ public class LD33ServerBoundPacketDecoder extends ByteToMessageDecoder {
                     int spawningUnitX = in.readInt();
                     int spawningUnitY = in.readInt();
                     String spawningUnitType = readString(in);
+                    long spawningUnitCompletionTime = in.readLong();
                     Unit spawningUnit;
                     switch (spawningUnitType) {
                         case "wall":
-                            spawningUnit = new Wall(UUID.fromString(spawningUnitUUID), Player.getByUUID(null, UUID.fromString(spawningUnitPlayerUUID)), server.getWorld().getTileAt(spawningUnitX, spawningUnitY));
+                            spawningUnit = new Wall(UUID.fromString(spawningUnitUUID), Player.getByUUID(null, UUID.fromString(spawningUnitPlayerUUID)), server.getWorld().getTileAt(spawningUnitX, spawningUnitY), spawningUnitCompletionTime);
                             break;
                         case "dragon":
-                            spawningUnit = new Dragon(UUID.fromString(spawningUnitUUID), Player.getByUUID(null, UUID.fromString(spawningUnitPlayerUUID)), server.getWorld().getTileAt(spawningUnitX, spawningUnitY));
+                            spawningUnit = new Dragon(UUID.fromString(spawningUnitUUID), Player.getByUUID(null, UUID.fromString(spawningUnitPlayerUUID)), server.getWorld().getTileAt(spawningUnitX, spawningUnitY), spawningUnitCompletionTime);
                             break;
                         default:
                             spawningUnit = null;
@@ -94,6 +95,12 @@ public class LD33ServerBoundPacketDecoder extends ByteToMessageDecoder {
                 case 7:
                     String chatMessage = readString(in);
                     out.add(new ChatMessageServerBoundPacket(chatMessage));
+                    break;
+                case 8:
+                    int purchasedUnitX = in.readInt();
+                    int purchasedUnitY = in.readInt();
+                    String purchasedUnitType = readString(in);
+                    out.add(new UnitPurchaseServerBoundPacket(purchasedUnitX, purchasedUnitY, purchasedUnitType));
                     break;
             }
         }

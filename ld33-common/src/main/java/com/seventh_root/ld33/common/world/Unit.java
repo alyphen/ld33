@@ -26,6 +26,7 @@ import java.sql.SQLException;
 import java.util.*;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.max;
 
 public abstract class Unit implements DatabaseEntity {
 
@@ -57,8 +58,9 @@ public abstract class Unit implements DatabaseEntity {
     private int yOffset;
     private Tile target;
     private List<Tile> path;
+    private long completionTime;
 
-    public Unit(Connection databaseConnection, Player player, int health, int maxHealth, boolean solid, Tile tile) {
+    public Unit(Connection databaseConnection, Player player, int health, int maxHealth, boolean solid, Tile tile, long completionTime) {
         this.databaseConnection = databaseConnection;
         this.playerUUID = player.getUUID();
         this.health = health;
@@ -71,8 +73,8 @@ public abstract class Unit implements DatabaseEntity {
         this.yOffset = 0;
     }
 
-    public Unit(Player player, int health, int maxHealth, boolean solid, Tile tile) {
-        this(null, player, health, maxHealth, solid, tile);
+    public Unit(Player player, int health, int maxHealth, boolean solid, Tile tile, long completionTime) {
+        this(null, player, health, maxHealth, solid, tile, completionTime);
     }
 
     public Connection getDatabaseConnection() {
@@ -170,13 +172,25 @@ public abstract class Unit implements DatabaseEntity {
         this.path = null;
     }
 
+    public long getCompletionTime() {
+        return completionTime;
+    }
+
+    public long getTimeToComplete() {
+        return max(getCompletionTime() - System.currentTimeMillis(), 0);
+    }
+
+    public boolean isComplete() {
+        return getTimeToComplete() == 0;
+    }
+
     public void moveTo(Tile tile) {
         setTarget(tile);
     }
 
     public abstract int getSpeed();
 
-    public void onTick() {
+    public void onTick() throws SQLException {
         if (getTarget() != null) {
             if (getTarget() != getTile()) {
                 if (path == null) path = getTile().getWorld().findPath(getTile(), getTarget());
@@ -197,6 +211,9 @@ public abstract class Unit implements DatabaseEntity {
                             setTile(nextTile);
                             setXOffset(0);
                             setYOffset(0);
+                            if (getDatabaseConnection() != null) {
+                                update();
+                            }
                         } else {
                             if (nextTile.getX() > getTile().getX()) {
                                 setDX(getSpeed());
@@ -231,7 +248,7 @@ public abstract class Unit implements DatabaseEntity {
         if (unitsByUUID.containsKey(uuid.toString())) return unitsByUUID.get(uuid.toString());
         if (databaseConnection != null) {
             PreparedStatement statement = databaseConnection.prepareStatement(
-                    "SELECT uuid, player_uuid, health, max_health, solid, x, y, type FROM unit WHERE uuid = ? LIMIT 1"
+                    "SELECT uuid, player_uuid, health, max_health, solid, x, y, type, completion_time FROM unit WHERE uuid = ? LIMIT 1"
             );
             statement.setString(1, uuid.toString());
             ResultSet resultSet = statement.executeQuery();
@@ -246,7 +263,7 @@ public abstract class Unit implements DatabaseEntity {
 
     public static Unit getByPosition(Connection databaseConnection, World world, int x, int y) throws SQLException {
         PreparedStatement statement = databaseConnection.prepareStatement(
-                "SELECT uuid, player_uuid, health, max_health, solid, x, y, type FROM unit WHERE x = ? AND y = ? LIMIT 1"
+                "SELECT uuid, player_uuid, health, max_health, solid, x, y, type, completion_time FROM unit WHERE x = ? AND y = ? LIMIT 1"
         );
         statement.setInt(1, x);
         statement.setInt(2, y);
@@ -262,16 +279,16 @@ public abstract class Unit implements DatabaseEntity {
     public static Unit fromResultSet(Connection databaseConnection, World world, ResultSet resultSet) throws SQLException {
         switch (resultSet.getString("type")) {
             case "wall":
-                return new Wall(UUID.fromString(resultSet.getString("uuid")), Player.getByUUID(databaseConnection, UUID.fromString(resultSet.getString("player_uuid"))), world.getTileAt(resultSet.getInt("x"), resultSet.getInt("y")));
+                return new Wall(UUID.fromString(resultSet.getString("uuid")), Player.getByUUID(databaseConnection, UUID.fromString(resultSet.getString("player_uuid"))), world.getTileAt(resultSet.getInt("x"), resultSet.getInt("y")), resultSet.getLong("completion_time"));
             case "dragon":
-                return new Dragon(UUID.fromString(resultSet.getString("uuid")), Player.getByUUID(databaseConnection, UUID.fromString(resultSet.getString("player_uuid"))), world.getTileAt(resultSet.getInt("x"), resultSet.getInt("y")));
+                return new Dragon(UUID.fromString(resultSet.getString("uuid")), Player.getByUUID(databaseConnection, UUID.fromString(resultSet.getString("player_uuid"))), world.getTileAt(resultSet.getInt("x"), resultSet.getInt("y")), resultSet.getLong("completion_time"));
         }
         return null;
     }
 
     public static List<Unit> getAllUnits(Connection databaseConnection, World world) throws SQLException {
         PreparedStatement statement = databaseConnection.prepareStatement(
-                "SELECT uuid, player_uuid, health, max_health, solid, x, y, type FROM unit"
+                "SELECT uuid, player_uuid, health, max_health, solid, x, y, type, completion_time FROM unit"
         );
         ResultSet resultSet = statement.executeQuery();
         List<Unit> units = new ArrayList<>();

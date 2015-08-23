@@ -25,12 +25,13 @@ import java.util.UUID;
 
 public class Wall extends Unit {
 
-    public Wall(Connection databaseConnection, Player player, Tile tile) {
-        super(databaseConnection, player, 100, 100, true, tile);
+    public Wall(Connection databaseConnection, Player player, Tile tile, long completionTime) throws SQLException {
+        super(databaseConnection, player, 100, 100, true, tile, completionTime);
+        insert();
     }
 
-    public Wall(UUID uuid, Player player, Tile tile) {
-        super(player, 100, 100, true, tile);
+    public Wall(UUID uuid, Player player, Tile tile, long completionTime) {
+        super(player, 100, 100, true, tile, completionTime);
         setUUID(uuid);
         setPlayer(player);
         setTile(tile);
@@ -39,7 +40,7 @@ public class Wall extends Unit {
     @Override
     public void insert() throws SQLException {
         PreparedStatement statement = getDatabaseConnection().prepareStatement(
-                "INSERT INTO unit(uuid, player_uuid, health, max_health, solid, x, y, type) VALUES(?, ?, ?, ?, ?, ?, ?, ?)"
+                "INSERT INTO unit(uuid, player_uuid, health, max_health, solid, x, y, type, completion_time) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)"
         );
         setUUID(UUID.randomUUID());
         statement.setString(1, getUUID().toString());
@@ -50,13 +51,15 @@ public class Wall extends Unit {
         statement.setInt(6, getTile().getX());
         statement.setInt(7, getTile().getY());
         statement.setString(8, "wall");
+        statement.setLong(9, getCompletionTime());
         statement.executeUpdate();
+        cacheUnit(this);
     }
 
     @Override
     public void update() throws SQLException {
         PreparedStatement statement = getDatabaseConnection().prepareStatement(
-                "UPDATE unit SET player_uuid = ?, health = ?, max_health = ?, solid = ?, x = ?, y = ?, type = ? WHERE uuid = ?"
+                "UPDATE unit SET player_uuid = ?, health = ?, max_health = ?, solid = ?, x = ?, y = ?, type = ?, completion_time = ? WHERE uuid = ?"
         );
         statement.setString(1, getPlayer().getUUID().toString());
         statement.setInt(2, getHealth());
@@ -65,7 +68,8 @@ public class Wall extends Unit {
         statement.setInt(5, getTile().getX());
         statement.setInt(6, getTile().getY());
         statement.setString(7, "wall");
-        statement.setString(8, getUUID().toString());
+        statement.setLong(8, getCompletionTime());
+        statement.setString(9, getUUID().toString());
         statement.executeUpdate();
     }
 
@@ -76,6 +80,7 @@ public class Wall extends Unit {
         );
         statement.setString(1, getUUID().toString());
         statement.executeUpdate();
+        uncacheUnit(this);
     }
 
     @Override

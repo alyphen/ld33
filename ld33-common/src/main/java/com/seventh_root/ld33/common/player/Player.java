@@ -56,25 +56,29 @@ public class Player implements DatabaseEntity {
     private String name;
     private String passwordHash;
     private String passwordSalt;
+    private int resources;
 
     public Player(Connection databaseConnection, String name, String password) throws SQLException {
         this.databaseConnection = databaseConnection;
         this.name = name;
         setPassword(password);
+        this.resources = 100;
         insert();
     }
 
-    private Player(Connection databaseConnection, UUID uuid, String name, String passwordHash, String passwordSalt) {
+    private Player(Connection databaseConnection, UUID uuid, String name, String passwordHash, String passwordSalt, int resources) {
         this.databaseConnection = databaseConnection;
         this.uuid = uuid;
         this.name = name;
         this.passwordHash = passwordHash;
         this.passwordSalt = passwordSalt;
+        this.resources = resources;
     }
 
-    public Player(UUID uuid, String name) {
+    public Player(UUID uuid, String name, int resources) {
         this.uuid = uuid;
         this.name = name;
+        this.resources = resources;
     }
 
     public Connection getDatabaseConnection() {
@@ -114,16 +118,25 @@ public class Player implements DatabaseEntity {
         return sha256Hex(password + getPasswordSalt()).equals(getPasswordHash());
     }
 
+    public int getResources() {
+        return resources;
+    }
+
+    public void setResources(int resources) {
+        this.resources = resources;
+    }
+
     @Override
     public void insert() throws SQLException {
         PreparedStatement statement = getDatabaseConnection().prepareStatement(
-                "INSERT INTO player(uuid, name, password_hash, password_salt) VALUES(?, ?, ?, ?)"
+                "INSERT INTO player(uuid, name, password_hash, password_salt, resources) VALUES(?, ?, ?, ?, ?)"
         );
         setUUID(UUID.randomUUID());
         statement.setString(1, getUUID().toString());
         statement.setString(2, getName());
         statement.setString(3, getPasswordHash());
         statement.setString(4, getPasswordSalt());
+        statement.setInt(5, getResources());
         statement.executeUpdate();
         cachePlayer(this);
     }
@@ -131,12 +144,13 @@ public class Player implements DatabaseEntity {
     @Override
     public void update() throws SQLException {
         PreparedStatement statement = getDatabaseConnection().prepareStatement(
-                "UPDATE player SET name = ?, password_hash = ?, password_salt = ? WHERE uuid = ?"
+                "UPDATE player SET name = ?, password_hash = ?, password_salt = ?, resources = ? WHERE uuid = ?"
         );
         statement.setString(1, getName());
         statement.setString(2, getPasswordHash());
         statement.setString(3, getPasswordSalt());
-        statement.setString(4, getUUID().toString());
+        statement.setInt(4, getResources());
+        statement.setString(5, getUUID().toString());
         statement.executeUpdate();
     }
 
@@ -153,12 +167,12 @@ public class Player implements DatabaseEntity {
         if (playersByUUID.containsKey(uuid.toString())) return playersByUUID.get(uuid.toString());
         if (databaseConnection != null) {
             PreparedStatement statement = databaseConnection.prepareStatement(
-                    "SELECT uuid, name, password_hash, password_salt FROM player WHERE uuid = ? LIMIT 1"
+                    "SELECT uuid, name, password_hash, password_salt, resources FROM player WHERE uuid = ? LIMIT 1"
             );
             statement.setString(1, uuid.toString());
             ResultSet resultSet = statement.executeQuery();
             if (resultSet.next()) {
-                Player player = new Player(databaseConnection, UUID.fromString(resultSet.getString("uuid")), resultSet.getString("name"), resultSet.getString("password_hash"), resultSet.getString("password_salt"));
+                Player player = new Player(databaseConnection, UUID.fromString(resultSet.getString("uuid")), resultSet.getString("name"), resultSet.getString("password_hash"), resultSet.getString("password_salt"), resultSet.getInt("resources"));
                 cachePlayer(player);
                 return player;
             }
@@ -170,12 +184,12 @@ public class Player implements DatabaseEntity {
         if (playersByName.containsKey(playerName)) return playersByName.get(playerName);
         if (databaseConnection != null) {
             PreparedStatement statement = databaseConnection.prepareStatement(
-                    "SELECT uuid, name, password_hash, password_salt FROM player WHERE name = ? LIMIT 1"
+                    "SELECT uuid, name, password_hash, password_salt, resources FROM player WHERE name = ? LIMIT 1"
             );
             statement.setString(1, playerName);
             ResultSet resultSet = statement.executeQuery();
             if (resultSet.next()) {
-                return new Player(databaseConnection, UUID.fromString(resultSet.getString("uuid")), resultSet.getString("name"), resultSet.getString("password_hash"), resultSet.getString("password_salt"));
+                return new Player(databaseConnection, UUID.fromString(resultSet.getString("uuid")), resultSet.getString("name"), resultSet.getString("password_hash"), resultSet.getString("password_salt"), resultSet.getInt("resources"));
             }
         }
         return null;

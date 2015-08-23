@@ -25,13 +25,13 @@ import java.util.UUID;
 
 public class Dragon extends Unit {
 
-    public Dragon(Connection databaseConnection, Player player, Tile tile) throws SQLException {
-        super(databaseConnection, player, 50, 50, true, tile);
+    public Dragon(Connection databaseConnection, Player player, Tile tile, long completionTime) throws SQLException {
+        super(databaseConnection, player, 50, 50, true, tile, completionTime);
         insert();
     }
 
-    public Dragon(UUID uuid, Player player, Tile tile) {
-        super(player, 100, 100, true, tile);
+    public Dragon(UUID uuid, Player player, Tile tile, long completionTime) {
+        super(player, 100, 100, true, tile, completionTime);
         setUUID(uuid);
         setPlayer(player);
         setTile(tile);
@@ -45,7 +45,7 @@ public class Dragon extends Unit {
     @Override
     public void insert() throws SQLException {
         PreparedStatement statement = getDatabaseConnection().prepareStatement(
-                "INSERT INTO unit(uuid, player_uuid, health, max_health, solid, x, y, type) VALUES(?, ?, ?, ?, ?, ?, ?, ?)"
+                "INSERT INTO unit(uuid, player_uuid, health, max_health, solid, x, y, type, completion_time) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)"
         );
         setUUID(UUID.randomUUID());
         statement.setString(1, getUUID().toString());
@@ -56,6 +56,7 @@ public class Dragon extends Unit {
         statement.setInt(6, getTile().getX());
         statement.setInt(7, getTile().getY());
         statement.setString(8, "dragon");
+        statement.setLong(9, getCompletionTime());
         statement.executeUpdate();
         cacheUnit(this);
     }
@@ -63,7 +64,7 @@ public class Dragon extends Unit {
     @Override
     public void update() throws SQLException {
         PreparedStatement statement = getDatabaseConnection().prepareStatement(
-                "UPDATE unit SET player_uuid = ?, health = ?, max_health = ?, solid = ?, x = ?, y = ?, type = ? WHERE uuid = ?"
+                "UPDATE unit SET player_uuid = ?, health = ?, max_health = ?, solid = ?, x = ?, y = ?, type = ?, completion_time = ? WHERE uuid = ?"
         );
         statement.setString(1, getPlayer().getUUID().toString());
         statement.setInt(2, getHealth());
@@ -72,7 +73,8 @@ public class Dragon extends Unit {
         statement.setInt(5, getTile().getX());
         statement.setInt(6, getTile().getY());
         statement.setString(7, "dragon");
-        statement.setString(8, getUUID().toString());
+        statement.setLong(8, getCompletionTime());
+        statement.setString(9, getUUID().toString());
         statement.executeUpdate();
     }
 

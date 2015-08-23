@@ -53,7 +53,8 @@ public class LD33ClientBoundPacketDecoder extends ByteToMessageDecoder {
                 case 2:
                     String joiningPlayerUUID = readString(in);
                     String joiningPlayerName = readString(in);
-                    out.add(new PlayerJoinClientBoundPacket(UUID.fromString(joiningPlayerUUID), joiningPlayerName));
+                    int joiningPlayerResources = in.readInt();
+                    out.add(new PlayerJoinClientBoundPacket(UUID.fromString(joiningPlayerUUID), joiningPlayerName, joiningPlayerResources));
                     break;
                 case 3:
                     String quittingPlayerUUID = readString(in);
@@ -71,13 +72,14 @@ public class LD33ClientBoundPacketDecoder extends ByteToMessageDecoder {
                     int spawningUnitX = in.readInt();
                     int spawningUnitY = in.readInt();
                     String type = readString(in);
+                    long spawningUnitCompletionTime = in.readLong();
                     Unit unit;
                     switch (type) {
                         case "wall":
-                            unit = new Wall(UUID.fromString(spawningUnitUUID), Player.getByUUID(null, UUID.fromString(spawningUnitPlayerUUID)), client.getWorldPanel().getWorld().getTileAt(spawningUnitX, spawningUnitY));
+                            unit = new Wall(UUID.fromString(spawningUnitUUID), Player.getByUUID(null, UUID.fromString(spawningUnitPlayerUUID)), client.getWorldPanel().getWorld().getTileAt(spawningUnitX, spawningUnitY), spawningUnitCompletionTime);
                             break;
                         case "dragon":
-                            unit = new Dragon(UUID.fromString(spawningUnitUUID), Player.getByUUID(null, UUID.fromString(spawningUnitPlayerUUID)), client.getWorldPanel().getWorld().getTileAt(spawningUnitX, spawningUnitY));
+                            unit = new Dragon(UUID.fromString(spawningUnitUUID), Player.getByUUID(null, UUID.fromString(spawningUnitPlayerUUID)), client.getWorldPanel().getWorld().getTileAt(spawningUnitX, spawningUnitY), spawningUnitCompletionTime);
                             break;
                         default:
                             unit = null;
@@ -96,6 +98,13 @@ public class LD33ClientBoundPacketDecoder extends ByteToMessageDecoder {
                 case 7:
                     String chatMessage = readString(in);
                     out.add(new ChatMessageClientBoundPacket(chatMessage));
+                    break;
+                case 8:
+                    String purchasingPlayerUUID = readString(in);
+                    int purchasedUnitX = in.readInt();
+                    int purchasedUnitY = in.readInt();
+                    String purchasedUnitType = readString(in);
+                    out.add(new UnitPurchaseClientBoundPacket(UUID.fromString(purchasingPlayerUUID), purchasedUnitX, purchasedUnitY, purchasedUnitType));
                     break;
             }
         }

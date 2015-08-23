@@ -34,12 +34,14 @@ public class UnitSpawnClientBoundPacket extends ClientBoundPacket {
     private int x;
     private int y;
     private String type;
+    private long completionTime;
 
     public UnitSpawnClientBoundPacket(Unit unit) throws SQLException {
         this.unitUUID = unit.getUUID().toString();
         this.playerUUID = unit.getPlayer().getUUID().toString();
         this.x = unit.getTile().getX();
         this.y = unit.getTile().getY();
+        this.completionTime = unit.getCompletionTime();
         if (unit instanceof Wall)
             this.type = "wall";
         else if (unit instanceof Dragon)
@@ -54,9 +56,9 @@ public class UnitSpawnClientBoundPacket extends ClientBoundPacket {
     public Unit getUnit(World world) throws SQLException {
         switch (type) {
             case "wall":
-                return new Wall(UUID.fromString(unitUUID), Player.getByUUID(null, UUID.fromString(playerUUID)), world.getTileAt(x, y));
+                return new Wall(UUID.fromString(unitUUID), Player.getByUUID(null, UUID.fromString(playerUUID)), world.getTileAt(x, y), completionTime);
             case "dragon":
-                return new Dragon(UUID.fromString(unitUUID), Player.getByUUID(null, UUID.fromString(playerUUID)), world.getTileAt(x, y));
+                return new Dragon(UUID.fromString(unitUUID), Player.getByUUID(null, UUID.fromString(playerUUID)), world.getTileAt(x, y), completionTime);
         }
         return null;
     }
@@ -69,6 +71,7 @@ public class UnitSpawnClientBoundPacket extends ClientBoundPacket {
         buf.writeInt(x);
         buf.writeInt(y);
         writeString(buf, type);
+        buf.writeLong(completionTime);
     }
 
 }

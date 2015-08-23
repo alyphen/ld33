@@ -22,6 +22,7 @@ import com.seventh_root.ld33.common.player.Player;
 import com.seventh_root.ld33.common.world.Dragon;
 import com.seventh_root.ld33.common.world.Tile;
 import com.seventh_root.ld33.common.world.Unit;
+import com.seventh_root.ld33.common.world.Wall;
 import com.seventh_root.ld33.server.LD33Server;
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelHandlerAdapter;
@@ -77,7 +78,7 @@ public class LD33ServerHandler extends ChannelHandlerAdapter {
                     Player player = new Player(server.getDatabaseConnection(), playerName, password);
                     ctx.channel().attr(PLAYER).set(player);
                     ctx.writeAndFlush(new PlayerLoginResponseClientBoundPacket("Sign up successful. Entering the game world...", true));
-                    channels.writeAndFlush(new PlayerJoinClientBoundPacket(player.getUUID(), player.getName()));
+                    channels.writeAndFlush(new PlayerJoinClientBoundPacket(player.getUUID(), player.getName(), player.getResources()));
                     Random random = new Random();
                     int startX = random.nextInt(server.getWorld().getWidth());
                     int startY = random.nextInt(server.getWorld().getHeight());
@@ -87,7 +88,7 @@ public class LD33ServerHandler extends ChannelHandlerAdapter {
                         startY = random.nextInt(server.getWorld().getHeight());
                         startTile = server.getWorld().getTileAt(startX, startY);
                     }
-                    startTile.setUnit(new Dragon(server.getDatabaseConnection(), player, startTile));
+                    startTile.setUnit(new Dragon(server.getDatabaseConnection(), player, startTile, System.currentTimeMillis()));
                     sendUnits(ctx);
                 } else {
                     ctx.writeAndFlush(new PlayerLoginResponseClientBoundPacket("Sign up unsuccessful: that username is already in use", false));
@@ -98,7 +99,7 @@ public class LD33ServerHandler extends ChannelHandlerAdapter {
                     if (player.checkPassword(server.getEncryptionManager().decrypt(packet.getEncryptedPassword()))) {
                         ctx.channel().attr(PLAYER).set(player);
                         ctx.writeAndFlush(new PlayerLoginResponseClientBoundPacket("Login successful. Entering the game world...", true));
-                        channels.writeAndFlush(new PlayerJoinClientBoundPacket(player.getUUID(), player.getName()));
+                        channels.writeAndFlush(new PlayerJoinClientBoundPacket(player.getUUID(), player.getName(), player.getResources()));
                         sendUnits(ctx);
                     } else {
                         ctx.writeAndFlush(new PlayerLoginResponseClientBoundPacket("Login unsuccessful: incorrect credentials", false));
@@ -127,6 +128,18 @@ public class LD33ServerHandler extends ChannelHandlerAdapter {
         } else if (msg instanceof ChatMessageServerBoundPacket) {
             ChatMessageServerBoundPacket packet = (ChatMessageServerBoundPacket) msg;
             channels.writeAndFlush(new ChatMessageClientBoundPacket(ctx.channel().attr(PLAYER).get().getName() + ": " + packet.getMessage()));
+        } else if (msg instanceof UnitPurchaseServerBoundPacket) {
+            UnitPurchaseServerBoundPacket packet = (UnitPurchaseServerBoundPacket) msg;
+            Player player = ctx.channel().attr(PLAYER).get();
+            int cost = server.getEconomyManager().getResourceCost(packet.getUnitType());
+            if (player.getResources() >= cost) {
+                player.setResources(player.getResources() - cost);
+                player.update();
+                Wall wall = new Wall(server.getDatabaseConnection(), player, server.getWorld().getTileAt(packet.getX(), packet.getY()), System.currentTimeMillis() + server.getEconomyManager().getTimeCost(packet.getUnitType()));
+                channels.writeAndFlush(new UnitSpawnClientBoundPacket(wall));
+            } else {
+                ctx.writeAndFlush(new ChatMessageClientBoundPacket("You do not have the resources to build that."));
+            }
         }
     }
 

@@ -16,6 +16,7 @@
 
 package com.seventh_root.ld33.server;
 
+import com.seventh_root.ld33.common.economy.EconomyManager;
 import com.seventh_root.ld33.common.encrypt.EncryptionManager;
 import com.seventh_root.ld33.common.world.Unit;
 import com.seventh_root.ld33.common.world.World;
@@ -51,6 +52,7 @@ public class LD33Server {
     private Connection databaseConnection;
     private Logger logger;
     private EncryptionManager encryptionManager;
+    private EconomyManager economyManager;
     private World world;
     private boolean running;
     private static final long DELAY = 25L;
@@ -72,6 +74,7 @@ public class LD33Server {
             getLogger().log(SEVERE, "Failed to connect to database", exception);
         }
         encryptionManager = new EncryptionManager();
+        economyManager = new EconomyManager();
         world = new World((int) ((double) getConfig().getMap("world").get("width")), (int) ((double) getConfig().getMap("world").get("height")));
         loadUnits();
     }
@@ -90,6 +93,10 @@ public class LD33Server {
 
     public EncryptionManager getEncryptionManager() {
         return encryptionManager;
+    }
+
+    public EconomyManager getEconomyManager() {
+        return economyManager;
     }
 
     public World getWorld() {
@@ -141,7 +148,7 @@ public class LD33Server {
             }
             channel.closeFuture().sync();
         } catch (InterruptedException exception) {
-            exception.printStackTrace();
+            getLogger().log(SEVERE, "Event loop group interrupted", exception);
         } finally {
             bossGroup.shutdownGracefully();
             workerGroup.shutdownGracefully();
@@ -149,7 +156,11 @@ public class LD33Server {
     }
 
     private void doTick() {
-        world.onTick();
+        try {
+            world.onTick();
+        } catch (SQLException exception) {
+            getLogger().log(SEVERE, "Failed to update unit in database", exception);
+        }
     }
 
     public void loadConfig() {

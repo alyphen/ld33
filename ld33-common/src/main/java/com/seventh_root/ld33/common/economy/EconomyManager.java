@@ -14,26 +14,29 @@
  * limitations under the License.
  */
 
-package com.seventh_root.ld33.client.panel;
+package com.seventh_root.ld33.common.economy;
 
-import com.seventh_root.ld33.client.LD33Client;
+import java.util.HashMap;
+import java.util.Map;
 
-import javax.swing.*;
-import java.awt.*;
+public class EconomyManager {
 
-import static java.awt.BorderLayout.CENTER;
-import static java.awt.BorderLayout.EAST;
-import static java.awt.BorderLayout.SOUTH;
+    private Map<String, Integer> resourceCosts;
+    private Map<String, Integer> timeCosts;
 
-public class GamePanel extends JPanel {
-
-    private LD33Client client;
-
-    public GamePanel(LD33Client client) {
-        this.client = client;
-        setLayout(new BorderLayout());
-        add(client.getWorldPanel(), CENTER);
-        add(client.getChatPanel(), SOUTH);
-        add(client.getShopPanel(), EAST);
+    public EconomyManager() {
+        resourceCosts = new HashMap<>();
+        resourceCosts.put("wall", 10);
+        timeCosts = new HashMap<>();
+        timeCosts.put("wall", 5);
     }
+
+    public int getResourceCost(String unitType) {
+        return resourceCosts.get(unitType);
+    }
+
+    public int getTimeCost(String unitType) {
+        return timeCosts.get(unitType);
+    }
+
 }

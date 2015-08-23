@@ -20,6 +20,7 @@ import com.seventh_root.ld33.common.pathfinding.Map;
 import com.seventh_root.ld33.common.pathfinding.NodeFactoryImpl;
 import com.seventh_root.ld33.common.pathfinding.NodeImpl;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,7 +48,7 @@ public class World {
             return null;
     }
 
-    public void onTick() {
+    public void onTick() throws SQLException {
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
                 Tile tile = getTileAt(x, y);
