@@ -16,9 +16,7 @@
 
 package com.seventh_root.ld33.client;
 
-import com.seventh_root.ld33.client.network.LD33ClientBoundPacketDecoder;
 import com.seventh_root.ld33.client.network.LD33ClientHandler;
-import com.seventh_root.ld33.client.network.LD33ServerBoundPacketEncoder;
 import com.seventh_root.ld33.client.panel.*;
 import com.seventh_root.ld33.client.texture.TextureManager;
 import com.seventh_root.ld33.common.economy.EconomyManager;
@@ -32,6 +30,9 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.codec.serialization.ClassResolvers;
+import io.netty.handler.codec.serialization.ObjectDecoder;
+import io.netty.handler.codec.serialization.ObjectEncoder;
 
 import javax.swing.*;
 import java.awt.*;
@@ -107,8 +108,10 @@ public class LD33Client extends JPanel {
                         @Override
                         public void initChannel(SocketChannel channel) throws Exception {
                             channel.pipeline().addLast(
-                                    new LD33ServerBoundPacketEncoder(),
-                                    new LD33ClientBoundPacketDecoder(LD33Client.this),
+                                    new ObjectEncoder(),
+                                    new ObjectDecoder(ClassResolvers.cacheDisabled(null)),
+                                    //new LD33ServerBoundPacketEncoder(),
+                                    //new LD33ClientBoundPacketDecoder(LD33Client.this),
                                     new LD33ClientHandler(LD33Client.this)
                             );
                         }

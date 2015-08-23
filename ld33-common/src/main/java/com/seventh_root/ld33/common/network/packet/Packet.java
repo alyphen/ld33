@@ -18,9 +18,10 @@ package com.seventh_root.ld33.common.network.packet;
 
 import io.netty.buffer.ByteBuf;
 
+import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 
-public abstract class Packet {
+public abstract class Packet implements Serializable {
 
     public abstract int getId();
 

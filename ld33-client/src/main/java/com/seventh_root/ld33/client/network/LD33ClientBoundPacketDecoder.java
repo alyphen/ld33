@@ -26,6 +26,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -39,6 +40,10 @@ public class LD33ClientBoundPacketDecoder extends ByteToMessageDecoder {
 
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
+        byte[] output = new byte[in.readableBytes()];
+        in.readBytes(output);
+        System.out.println(Arrays.toString(output));
+        in.resetReaderIndex();
         while (in.isReadable()) {
             int id = in.readInt();
             switch (id) {

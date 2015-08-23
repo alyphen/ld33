@@ -21,8 +21,6 @@ import com.seventh_root.ld33.common.encrypt.EncryptionManager;
 import com.seventh_root.ld33.common.world.Unit;
 import com.seventh_root.ld33.common.world.World;
 import com.seventh_root.ld33.server.config.Config;
-import com.seventh_root.ld33.server.network.LD33ClientBoundPacketEncoder;
-import com.seventh_root.ld33.server.network.LD33ServerBoundPacketDecoder;
 import com.seventh_root.ld33.server.network.LD33ServerHandler;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
@@ -31,6 +29,9 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.codec.serialization.ClassResolvers;
+import io.netty.handler.codec.serialization.ObjectDecoder;
+import io.netty.handler.codec.serialization.ObjectEncoder;
 
 import java.io.File;
 import java.io.IOException;
@@ -123,8 +124,10 @@ public class LD33Server {
                         @Override
                         public void initChannel(SocketChannel channel) throws Exception {
                             channel.pipeline().addLast(
-                                    new LD33ClientBoundPacketEncoder(),
-                                    new LD33ServerBoundPacketDecoder(LD33Server.this),
+                                    new ObjectEncoder(),
+                                    new ObjectDecoder(ClassResolvers.cacheDisabled(null)),
+                                    //new LD33ClientBoundPacketEncoder(),
+                                    //new LD33ServerBoundPacketDecoder(LD33Server.this),
                                     handler
                             );
                         }
