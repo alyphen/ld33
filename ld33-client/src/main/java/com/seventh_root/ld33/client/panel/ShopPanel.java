@@ -81,6 +81,11 @@ public class ShopPanel extends JPanel {
             graphics.drawString(Integer.toString(client.getEconomyManager().getTimeCost(shopItem.getName())), x + 120, y + 80 + graphics.getFontMetrics().getMaxAscent());
             graphics.drawString(shopItem.getDisplayName(), x + 120, y + 16 + graphics.getFontMetrics().getMaxAscent());
         }
+        graphics.setColor(Color.DARK_GRAY);
+        graphics.fillRoundRect(16, getHeight() - 32, getWidth() - 32, 64, 16, 16);
+        graphics.drawImage(client.getTextureManager().getTexture("resources"), 24, getHeight() - 24, null);
+        graphics.setColor(Color.WHITE);
+        graphics.drawString(Integer.toString(client.getPlayer().getResources()), 48, getHeight() - 24 + graphics.getFontMetrics().getMaxAscent());
     }
 
     public ShopItem getSelectedItem() {
