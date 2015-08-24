@@ -22,6 +22,7 @@ import com.seventh_root.ld33.client.sound.SoundPlayer;
 import com.seventh_root.ld33.client.texture.TextureManager;
 import com.seventh_root.ld33.common.economy.EconomyManager;
 import com.seventh_root.ld33.common.encrypt.EncryptionManager;
+import com.seventh_root.ld33.common.network.packet.serverbound.PlayerQuitServerBoundPacket;
 import com.seventh_root.ld33.common.network.packet.serverbound.ServerBoundPacket;
 import com.seventh_root.ld33.common.player.Player;
 import io.netty.bootstrap.Bootstrap;
@@ -37,6 +38,8 @@ import io.netty.handler.codec.serialization.ObjectEncoder;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.logging.Logger;
 
 import static java.lang.System.currentTimeMillis;
@@ -90,7 +93,13 @@ public class LD33Client extends JPanel {
         add(loginPanel, "login");
         add(new LoadingPanel(), "loading");
         new Thread(() -> getSoundPlayer().loop("/ld33.ogg")).start();
-
+        frame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent event) {
+                channel.writeAndFlush(new PlayerQuitServerBoundPacket());
+                channel.close();
+            }
+        });
     }
 
     public boolean isRunning() {
