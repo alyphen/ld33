@@ -29,6 +29,7 @@ import io.netty.channel.group.DefaultChannelGroup;
 import io.netty.util.AttributeKey;
 import io.netty.util.concurrent.GlobalEventExecutor;
 
+import java.net.InetSocketAddress;
 import java.sql.SQLException;
 import java.util.Random;
 import java.util.stream.Collectors;
@@ -100,8 +101,10 @@ public class LD33ServerHandler extends ChannelHandlerAdapter {
                         }
                     });
                     channels.writeAndFlush(new ChatMessageClientBoundPacket(player.getName() + " joined the game for the first time!"));
+                    server.getLogger().info(player.getName() + " signed up from " + ((InetSocketAddress) ctx.channel().remoteAddress()).getAddress().getHostAddress());
                 } else {
                     ctx.writeAndFlush(new PlayerLoginResponseClientBoundPacket("Sign up unsuccessful: that username is already in use", false));
+                    server.getLogger().info("A user from " + ((InetSocketAddress) ctx.channel().remoteAddress()).getAddress().getHostAddress() + " attempted to sign up with the username " + packet.getPlayerName() + " which was already in use");
                 }
             } else {
                 Player player = Player.getByName(server.getDatabaseConnection(), packet.getPlayerName());
@@ -114,14 +117,18 @@ public class LD33ServerHandler extends ChannelHandlerAdapter {
                             sendWorldInfo(ctx);
                             sendUnits(ctx);
                             channels.writeAndFlush(new ChatMessageClientBoundPacket(player.getName() + " joined the game. Welcome back!"));
+                            server.getLogger().info(player.getName() + " logged in from " + ((InetSocketAddress) ctx.channel().remoteAddress()).getAddress().getHostAddress());
                         } else {
                             ctx.writeAndFlush(new PlayerLoginResponseClientBoundPacket("Login unsuccessful: already logged in", false));
+                            server.getLogger().info(player.getName() + " attempted to log in from " + ((InetSocketAddress) ctx.channel().remoteAddress()).getAddress().getHostAddress() + " but was already logged in");
                         }
                     } else {
                         ctx.writeAndFlush(new PlayerLoginResponseClientBoundPacket("Login unsuccessful: incorrect credentials", false));
+                        server.getLogger().info("A user attempted to log in as " + packet.getPlayerName() + " from " + ((InetSocketAddress) ctx.channel().remoteAddress()).getAddress().getHostAddress() + " but supplied an incorrect password");
                     }
                 } else {
                     ctx.writeAndFlush(new PlayerLoginResponseClientBoundPacket("Login unsuccessful: incorrect credentials", false));
+                    server.getLogger().info("A user attempted to log in as " + packet.getPlayerName() + " from " + ((InetSocketAddress) ctx.channel().remoteAddress()).getAddress().getHostAddress() + " but supplied an invalid username");
                 }
             }
         //} else if (msg instanceof PlayerJoinServerBoundPacket) {
@@ -131,6 +138,7 @@ public class LD33ServerHandler extends ChannelHandlerAdapter {
             channels.stream().filter(channel -> channel != ctx.channel()).forEach(channel -> channel.writeAndFlush(new PlayerQuitClientBoundPacket(player.getUUID(), player.getName())));
             ctx.close();
             channels.writeAndFlush(new ChatMessageClientBoundPacket(ctx.channel().attr(PLAYER).get().getName() + " left the game"));
+            server.getLogger().info(ctx.channel().attr(PLAYER).get().getName() + " left the game");
         } else if (msg instanceof UnitSpawnServerBoundPacket) {
             UnitSpawnServerBoundPacket packet = (UnitSpawnServerBoundPacket) msg;
             Unit unit = packet.getUnit(server.getWorld());
@@ -153,6 +161,7 @@ public class LD33ServerHandler extends ChannelHandlerAdapter {
         } else if (msg instanceof ChatMessageServerBoundPacket) {
             ChatMessageServerBoundPacket packet = (ChatMessageServerBoundPacket) msg;
             channels.writeAndFlush(new ChatMessageClientBoundPacket(ctx.channel().attr(PLAYER).get().getName() + ": " + packet.getMessage()));
+            server.getLogger().info(ctx.channel().attr(PLAYER).get().getName() + ": " + packet.getMessage());
         } else if (msg instanceof UnitPurchaseServerBoundPacket) {
             UnitPurchaseServerBoundPacket packet = (UnitPurchaseServerBoundPacket) msg;
             Player player = ctx.channel().attr(PLAYER).get();

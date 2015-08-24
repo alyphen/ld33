@@ -64,20 +64,30 @@ public class LD33Server {
 
     public LD33Server() {
         logger = Logger.getLogger(getClass().getCanonicalName());
+        long beforeTime = System.currentTimeMillis();
         loadConfig();
+        getLogger().info("Loaded configuration (" + (System.currentTimeMillis() - beforeTime) + "ms)");
         try {
+            beforeTime = System.currentTimeMillis();
             databaseConnection = DriverManager.getConnection(
                     "jdbc:mysql://" + getConfig().getMap("database").get("url") + "/" + getConfig().getMap("database").get("database"),
                     (String) getConfig().getMap("database").get("user"),
                     (String) getConfig().getMap("database").get("password")
             );
+            getLogger().info("Connected to database (" + (System.currentTimeMillis() - beforeTime) + "ms)");
         } catch (SQLException exception) {
             getLogger().log(SEVERE, "Failed to connect to database", exception);
         }
+        beforeTime = System.currentTimeMillis();
         encryptionManager = new EncryptionManager();
+        getLogger().info("Set up keypair (" + (System.currentTimeMillis() - beforeTime) + "ms)");
+        beforeTime = System.currentTimeMillis();
         economyManager = new EconomyManager();
+        getLogger().info("Set up economy (" + (System.currentTimeMillis() - beforeTime) + "ms)");
+        beforeTime = System.currentTimeMillis();
         world = new World((int) ((double) getConfig().getMap("world").get("width")), (int) ((double) getConfig().getMap("world").get("height")));
         loadUnits();
+        getLogger().info("Set up world (" + (System.currentTimeMillis() - beforeTime) + "ms)");
     }
 
     public Config getConfig() {
