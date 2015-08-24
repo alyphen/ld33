@@ -4,15 +4,15 @@
     <parent>
         <groupId>com.seventh-root</groupId>
         <artifactId>ld33-parent</artifactId>
-        <version>0.1.0</version>
+        <version>0.1.1-SNAPSHOT</version>
     </parent>
     <artifactId>ld33-server</artifactId>
-    <version>0.1.0</version>
+    <version>0.1.1-SNAPSHOT</version>
     <dependencies>
         <dependency>
             <groupId>com.seventh-root</groupId>
             <artifactId>ld33-common</artifactId>
-            <version>0.1.0</version>
+            <version>0.1.1-SNAPSHOT</version>
         </dependency>
     </dependencies>
     <build>
