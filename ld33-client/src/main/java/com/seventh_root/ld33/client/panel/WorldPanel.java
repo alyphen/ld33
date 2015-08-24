@@ -20,6 +20,7 @@ import com.seventh_root.ld33.client.LD33Client;
 import com.seventh_root.ld33.client.ShopItem;
 import com.seventh_root.ld33.client.texture.TextureManager;
 import com.seventh_root.ld33.common.network.packet.serverbound.UnitMoveServerBoundPacket;
+import com.seventh_root.ld33.common.player.Player;
 import com.seventh_root.ld33.common.world.*;
 
 import javax.swing.*;
@@ -104,14 +105,19 @@ public class WorldPanel extends JPanel {
             public void mouseMoved(MouseEvent event) {
                 Tile tile = getWorld().getTileAt((cameraX + event.getX()) / 64, (cameraY + event.getY()) / 64);
                 if (tile != null) {
-                    if (tile.getUnit() != null) {
-                        Unit unit = tile.getUnit();
+                    Unit unit = tile.getUnit();
+                    if (unit != null) {
                         try {
-                            setToolTipText("Owner: " + unit.getPlayer().getName() + " " +
-                                    "Health: " + unit.getHealth() + "/" + unit.getMaxHealth() + " " +
-                                    "Tile: " + unit.getTile().getX() + ", " + unit.getTile().getY() +
-                                    (unit.getTimeToComplete() > 0 ? " Seconds till completion: " + (unit.getTimeToComplete() / 1000) : "")
-                            );
+                            Player player = unit.getPlayer();
+                            if (player != null) {
+                                setToolTipText("Owner: " + player.getName() + " " +
+                                                "Health: " + unit.getHealth() + "/" + unit.getMaxHealth() + " " +
+                                                "Tile: " + tile.getX() + ", " + tile.getY() +
+                                                (unit.getTimeToComplete() > 0 ? " Seconds till completion: " + (unit.getTimeToComplete() / 1000) : "")
+                                );
+                            } else {
+                                setToolTipText("Could not retrieve player information for this unit.");
+                            }
                         } catch (SQLException exception) {
                             client.getLogger().log(SEVERE, "Failed to get player for unit", exception);
                         }
